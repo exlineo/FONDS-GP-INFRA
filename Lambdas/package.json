@@ -1,0 +1,22 @@
+{
+  "name": "lambdas-dynamodb",
+  "version": "0.7.0",
+  "description": "Lambdas capables de manipuler une base DynamoDB créés avec AWS CDK",
+  "main": "2-index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "AWS",
+    "CDK",
+    "Lambda",
+    "DynamoDB",
+    "CRUD",
+    "Typescript"
+  ],
+  "author": "exlineo, Gérald Abbadie",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.1204.0"
+  }
+}
