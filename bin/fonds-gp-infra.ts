@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Des exemples de tout et de rien : https://github.com/aws-samples/aws-cdk-examples/tree/master/typescript
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { FondsGpInfraStack } from '../lib/fonds-gp-infra-stack';
