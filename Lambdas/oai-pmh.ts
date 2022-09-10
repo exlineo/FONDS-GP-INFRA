@@ -1,5 +1,8 @@
 import * as AWS from 'aws-sdk';;
 import { L } from './traductions/fr';
+// Exemples de requetes : https://www.hindawi.com/oai-pmh/
+// http://www.openarchives.org/OAI/openarchivesprotocol.html#ResponseCompression
+// https://libtechlaunchpad.com/2017/02/13/oai-pmh-basics-and-resources/
 
 // Récupérer la variable d'environnement créée par le CDK
 const DB_T_NAME = process.env.DB_T_NAME || '';

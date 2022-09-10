@@ -9,14 +9,15 @@ const db = new AWS.DynamoDB.DocumentClient();
 
 export const handler = async (event: any = {}): Promise<any> => {
   // Get data from request (if there'is)
-  let requestedItemId;
-  const body = event.body ? JSON.parse(event.body) : {};
+  let itemId;
+  const body = event.body ? (typeof event.body == 'object' ? event.body : JSON.parse(event.body)) : {};
+
   if(body.id) {
-    requestedItemId = body.id;
+    itemId = body.id;
   }else if(event.queryStringParameters && event.queryStringParameters.id){
-    requestedItemId = event.queryStringParameters.id;
+    itemId = event.queryStringParameters.id;
   }else{
-    requestedItemId = null;
+    itemId = null;
   };
 
   // Paramètres transmis dans la requête vers DynamoDB
@@ -25,10 +26,10 @@ export const handler = async (event: any = {}): Promise<any> => {
     Key: null
   };
   /** Set Key for scan if an ID was received */
-  if (requestedItemId) {
+  if (itemId) {
     // Set params key to call on object
     params.Key = {
-      [PRIMARY_KEY]: requestedItemId
+      [PRIMARY_KEY]: itemId
     };
     // Get data from DynamoDB in table
     try {

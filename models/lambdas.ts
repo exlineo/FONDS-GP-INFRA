@@ -13,21 +13,20 @@ interface LambdasStackI{
     db?:Table;
     lambdas:Array<LambdaI>;
 }
-const listeCollectionsLambdas:Array<LambdaI> = [
-    { name: 'collections-get', file: 'collections-get.ts', table:'collections', methods:['GET', 'HEAD'] },
-    { name: 'collections-post', file: 'collections-post.ts', table:'collections', methods:['POST', 'PUT'] },
-    { name: 'collections-add', file: 'collections-add.ts', table:'collections', methods:['POST']  },
-    { name: 'collections-delete', file: 'collections-delete.ts', table:'collections', methods:['DELETE']}
-];
-const listeNoticesLambdas:Array<LambdaI> = [
-    { name: 'notices-get', file: 'notices-get.ts', table:'notices', methods:['GET', 'HEAD'] },
-    { name: 'notices-post', file: 'notices-post.ts', table:'notices', methods:['POST', 'PUT'] },
-    { name: 'notices-add', file: 'notices-add.ts', table:'notices', methods:['POST']  },
-    { name: 'notices-delete', file: 'notices-delete.ts', table:'notices', methods:['DELETE']}
+/** Arrays of lambadas to create for collections */
+const collectionsLambdas:Array<LambdaI> = [
+    { name: 'collectionsget', file: 'get.ts', table:'collections', methods:['GET', 'HEAD'] },
+    { name: 'collectionsedit', file: 'edit.ts', table:'collections', methods:['POST', 'PUT', 'DELETE'] },
 ];
 export const collectionsStack:LambdasStackI = {
-    lambdas : listeCollectionsLambdas
+    lambdas : collectionsLambdas
 }
+/** Arrays of lambdas to create for notices */
+const noticesLambdas:Array<LambdaI> = [
+    { name: 'noticesget', file: 'get.ts', table:'notices', methods:['GET', 'HEAD'] },
+    { name: 'noticesedit', file: 'edit.ts', table:'notices', methods:['POST', 'PUT', 'DELETE'] },
+    { name: 'oaipmh', file: 'oai-pmh.ts', table:'notices', methods:['GET', 'HEAD'] }
+];
 export const noticesStack:LambdasStackI = {
-    lambdas : listeNoticesLambdas
+    lambdas : noticesLambdas
 }
