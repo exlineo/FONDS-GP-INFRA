@@ -30,3 +30,12 @@ const noticesLambdas:Array<LambdaI> = [
 export const noticesStack:LambdasStackI = {
     lambdas : noticesLambdas
 }
+/** Configuration services */
+/** Arrays of lambdas to create for notices */
+const configLambdas:Array<LambdaI> = [
+    { name: 'configget', file: 'get.ts', table:'configurations', methods:['GET', 'HEAD'] },
+    { name: 'configedit', file: 'edit.ts', table:'configurations', methods:['POST', 'PUT', 'DELETE'] },
+];
+export const configStack:LambdasStackI = {
+    lambdas : configLambdas
+}
