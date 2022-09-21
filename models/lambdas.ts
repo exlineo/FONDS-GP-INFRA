@@ -17,7 +17,7 @@ interface LambdasStackI{
 }
 /** Arrays of lambadas to create for collections */
 const collectionsLambdas:Array<LambdaI> = [
-    { name: 'collectionsget', file: 'get.ts', table:'collections', methods:['GET', 'HEAD'] },
+    { name: 'collectionsget', file: 'get.ts', table:'collections', methods:['GET', 'HEAD', 'POST'] },
     { name: 'collectionsedit', file: 'edit.ts', table:'collections', methods:['POST', 'PUT', 'DELETE'] },
 ];
 export const collectionsStack:LambdasStackI = {
@@ -25,10 +25,10 @@ export const collectionsStack:LambdasStackI = {
 }
 /** Arrays of lambdas to create for notices */
 const noticesLambdas:Array<LambdaI> = [
-    { name: 'noticesget', file: 'get.ts', table:'notices', methods:['GET', 'HEAD'] },
+    { name: 'noticesget', file: 'get.ts', table:'notices', methods:['GET', 'HEAD', 'POST'] },
     { name: 'noticesedit', file: 'edit.ts', table:'notices', methods:['POST', 'PUT', 'DELETE'] },
     { name: 'xmp', file: 'xmp.ts', table:'notices', bucket:'sets', methods:['GET', 'HEAD', 'POST', 'PUT'], layers:[{name:'exiflayer', file:'./Lambdas/nodejs.zip'}] },
-    { name: 'oaipmh', file: 'oai-pmh.ts', table:'notices', methods:['GET', 'HEAD'] },
+    { name: 'oaipmh', file: 'oai-pmh.ts', table:'notices', methods:['GET', 'HEAD', 'POST'] },
 ];
 export const noticesStack:LambdasStackI = {
     lambdas : noticesLambdas
