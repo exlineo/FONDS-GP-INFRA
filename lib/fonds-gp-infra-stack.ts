@@ -11,6 +11,7 @@ import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { join } from 'path';
 
 import { collectionsStack, noticesStack, LambdaI, configStack } from '../models/lambdas';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
 
 export class FondsGpInfraStack extends cdk.Stack {
 
@@ -24,53 +25,42 @@ export class FondsGpInfraStack extends cdk.Stack {
     this.UID = this.setStackParams(); // Get UID
     // console.log('UID 👉 ', this.UID.valueAsString);
     // this.outputDB = this.setDBTable(configStack.lambdas[0].table);
-
+    
     // LAMBDAS
     // List needed to save configurations
     configStack.lambdas.forEach((l, i) => {
-      if (!configStack.db) configStack.db = this.setDBTable(l.table);
+      if (!configStack.db && l.table) configStack.db = this.setDBTable(l.table);
       // Lambda created
-      l.lambda = this.setLambda(l, configStack.db);
+      l.lambda = this.setLambda(l, configStack.db!);
       // Create function URL for the Lambda
       l.lambda.addFunctionUrl(this.setFnUrl(l));
       // Give right to accessing database
-      configStack.db.grantReadWriteData(l.lambda);
+      if(l.table) configStack.db!.grantReadWriteData(l.lambda);
     });
     // List needed collections
     collectionsStack.lambdas.forEach((l, i) => {
-      if (!collectionsStack.db) collectionsStack.db = this.setDBTable(l.table);
+      if (!collectionsStack.db && l.table) collectionsStack.db = this.setDBTable(l.table);
       // Lambda created
-      l.lambda = this.setLambda(l, collectionsStack.db);
+      l.lambda = this.setLambda(l, collectionsStack.db!);
       // Create function URL for the Lambda
       l.lambda.addFunctionUrl(this.setFnUrl(l));
       // Give right to accessing database
-      collectionsStack.db.grantReadWriteData(l.lambda);
+      if(l.table) collectionsStack.db!.grantReadWriteData(l.lambda);
     });
+    
+    // Créer un bucket
+    const buck:Bucket = new S3.Bucket(this, 'sets');
     // List needed notices
     noticesStack.lambdas.forEach((l, i) => {
-      if (!noticesStack.db) noticesStack.db = this.setDBTable(l.table);
+      if (!noticesStack.db && l.table) noticesStack.db = this.setDBTable(l.table!);
       // Lambda created
-      l.lambda = this.setLambda(l, noticesStack.db);
+      l.lambda = this.setLambda(l, noticesStack.db!, l.bucket ? buck : undefined);
       // Create function URL for the Lambda
       const fUrl = l.lambda.addFunctionUrl(this.setFnUrl(l));
-      console.log(fUrl.url);
       this.setItem(l, fUrl.url);
       // Give right to accessing database
-      noticesStack.db.grantReadWriteData(l.lambda);
+      if(l.table) noticesStack.db!.grantReadWriteData(l.lambda);
     });
-    // Créer un bucket
-    const buck = new S3.Bucket(this, 'sets');
-    // 👇 export myBucket for cross-stack reference
-    // new cdk.CfnOutput(this, 'MaBuckRef', {
-    //   value: buck.bucketName,
-    //   description: 'Le nom de buck',
-    //   exportName: 'monBuck',
-    // });
-    // Créer un utilisateur et le connecter au groupe préparamétré
-    // const group = iam.Group.fromGroupArn(this, 'clients', 'arn:aws:iam::631286241071:group/clients');
-    // const user = new iam.User(this, this.UID);
-    // user.addToGroup(group);
-    // this.saveOutPut(configStack.lambdas[0].table, { idconfigurations:'init', gets: this.gets, edits: this.edits });
   }
   /** Récupérer l'UID en paramètre qui permettra de créer des ressources en lien avec la pile
    * Il est transmis avec --parameters (cdk deploy --parameters UID=IAM:UserID) https://docs.aws.amazon.com/cdk/v2/guide/parameters.html
@@ -88,10 +78,10 @@ export class FondsGpInfraStack extends cdk.Stack {
     return str + '-' + this.UID;
   }
   /** Create a lambda */
-  setLambda(l: any, db: any) {
+  setLambda(l: LambdaI, db?: Table, buck?:Bucket) {
     const lambda = new NodejsFunction(this, l.name, {
       entry: join(__dirname, '../Lambdas', l.file),
-      ...this.setLambdaParams(l.table, db)
+      ...this.setLambdaParams(l, db ?? db, buck ?? buck)
     });
     return lambda;
   }
@@ -110,20 +100,22 @@ export class FondsGpInfraStack extends cdk.Stack {
     return db;
   }
   /** Set parameters for Lambdas */
-  setLambdaParams(id: string, db: Table): NodejsFunctionProps {
+  setLambdaParams(l:LambdaI, db?:Table, buck?:Bucket): NodejsFunctionProps {
     const params: NodejsFunctionProps = {
       // La librairie à ajouter
       bundling: {
-        externalModules: ['aws-sdk']
+        externalModules: ['aws-sdk', 'exiftool-vendored']
       },
       depsLockFilePath: join(__dirname, '../Lambdas', 'package-lock.json'),
       memorySize: 128, // Paramètre pour montrer qu'il existe
       /** Donner des variables d'environnement pour les rendre accessibles à la lambda (transmises) */
       environment: {
-        PRIMARY_KEY: 'id' + id,
-        DB_T_NAME: db.tableName, // Table ajoutée en paramètre d'environnement pour la récupérer dans la Lambda
+        PRIMARY_KEY: 'id' + l.table,
+        DB_T_NAME: db ? db.tableName : 'null', // Table ajoutée en paramètre d'environnement pour la récupérer dans la Lambda
+        BUCKET: l.bucket ? buck!.bucketName : 'null'
       },
-      runtime: lambda.Runtime.NODEJS_16_X
+      runtime: lambda.Runtime.NODEJS_16_X,
+      layers: l.layers ? this.setLayers(l.layers) : []
     };
     return params;
   }
@@ -169,17 +161,28 @@ export class FondsGpInfraStack extends cdk.Stack {
   }
   /** Set item */
   setItem(l: LambdaI, url: string) {
-    // const item = {
-    //   id: this.UID,
-    //   name: l.name,
-    //   url,
-    //   methods: l.methods
-    // }
     if (l.methods.includes('GET')) {
       this.gets[l.name] = url;
     }else if(l.methods.includes('POST')){
       this.edits[l.name] = url;
     }
+  }
+  /** Create layers for lambdas */
+  setLayers(c:Array<any>){
+    const layers:Array<any> = [];
+    c.forEach(lay => {
+      let tmpLayer = new lambda.LayerVersion(this, lay.name+'layer', {
+        compatibleRuntimes: [
+          lambda.Runtime.NODEJS_12_X,
+          lambda.Runtime.NODEJS_14_X,
+          lambda.Runtime.NODEJS_16_X
+        ],
+        code: lambda.Code.fromAsset(lay.file),
+        description: `Add ${lay.name} to lambda`,
+      });
+      layers.push(tmpLayer);
+    });
+    return layers;
   }
   /** Save outputs  to get Lambdas URL list */
   saveOutPut(table: string, item: any) {

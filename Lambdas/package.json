@@ -17,6 +17,7 @@
   "author": "exlineo, Gérald Abbadie",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.1204.0"
+    "aws-sdk": "^2.1204.0",
+    "exiftool-vendored": "^17.1.0"
   }
 }

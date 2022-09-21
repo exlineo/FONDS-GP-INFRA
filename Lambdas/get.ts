@@ -1,4 +1,5 @@
 import * as AWS from 'aws-sdk';
+import { getId, bacthGetId, getAll } from './requetes/lire';
 
 // Récupérer la variable d'environnement créée par le CDK
 const DB_T_NAME = process.env.DB_T_NAME || '';
@@ -9,46 +10,14 @@ const db = new AWS.DynamoDB.DocumentClient();
 
 export const handler = async (event: any = {}): Promise<any> => {
   // Get data from request (if there'is)
-  let itemId;
-  const body = event.body ? (typeof event.body == 'object' ? event.body : JSON.parse(event.body)) : {};
+  
+  const body = event.body ? JSON.parse(event.body) : null;
 
-  if(body.id) {
-    itemId = body.id;
-  }else if(event.queryStringParameters && event.queryStringParameters.id){
-    itemId = event.queryStringParameters.id;
+  if(body && typeof body === 'string') {
+    return getId(PRIMARY_KEY, body, DB_T_NAME);
+  }else if(body && Array.isArray(body)){
+    return bacthGetId(PRIMARY_KEY, body, DB_T_NAME);
   }else{
-    itemId = null;
-  };
-
-  // Paramètres transmis dans la requête vers DynamoDB
-  const params: { TableName: string, Key: any } = {
-    TableName: DB_T_NAME,
-    Key: null
-  };
-  /** Set Key for scan if an ID was received */
-  if (itemId) {
-    // Set params key to call on object
-    params.Key = {
-      [PRIMARY_KEY]: itemId
-    };
-    // Get data from DynamoDB in table
-    try {
-      const response = await db.get(params).promise();
-      if (response.Item) {
-        return { statusCode: 200, body: JSON.stringify(response.Item) };
-      } else {
-        return { statusCode: 404 };
-      }
-    } catch (er) {
-      return { statusCode: 500, body: JSON.stringify(er) };
-    }
-  } else {
-    // Get all data in table
-    try {
-      const response = await db.scan(params).promise();
-      return { statusCode: 200, body: JSON.stringify(response.Items) };
-    } catch (er) {
-      return { statusCode: 500, body: JSON.stringify(er) };
-    }
+    return getAll(DB_T_NAME);
   }
 }

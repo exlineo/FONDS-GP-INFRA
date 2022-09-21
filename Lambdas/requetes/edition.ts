@@ -1,11 +1,19 @@
 import { L } from '../traductions/fr';
-import * as AWS from 'aws-sdk';;
+import * as AWS from 'aws-sdk'; import { request } from 'http';
+;
 
 // Accessing DYnamoDB table
 const db = new AWS.DynamoDB.DocumentClient();
 
 /** Create on PUT request */
 export const createData = async (body: any, KEY: string, BDD: string) => {
+    if (Array.isArray(body)) {
+        return createListData(body, KEY, BDD);
+    } else {
+        return createItem(body, KEY, BDD);
+    }
+}
+export const createItem = async (body: any, KEY: string, BDD: string) => {
     // Paramètres transmis dans la requête vers DynamoDB
     const params = {
         TableName: BDD,
@@ -19,7 +27,15 @@ export const createData = async (body: any, KEY: string, BDD: string) => {
         return { statusCode: 500, body: JSON.stringify(er) };
     }
 }
-
+/** Create list of objects */
+export const createListData = async (body: Array<any>, PRIMARY: string, BDD: string) => {
+    try {
+        const response = await db.batchWrite(generateBatchListPut(body, BDD)).promise();
+        return { statusCode: 204, body: L.ADD }
+    } catch (er) {
+        return { statusCode: 500, body: JSON.stringify(er) }
+    }
+}
 /** Update on POST request */
 export const updateData = async (body: any, KEY: string, BDD: string) => {
     const expressions: Array<string> = [];
@@ -69,4 +85,24 @@ export const deleteData = async (body: any, KEY: string, BDD: string) => {
     } catch (er) {
         return { statusCode: 500, body: JSON.stringify(er) };
     }
+}
+/** Générate batch put item request */
+const generateBatchListPut = (body: Array<any>, bdd: string) => {
+    const items: Array<any> = body.map((item: { PutRequest: { Item: any; } }, i: number) => {
+        // Limit insert to 25 objects (dynamoDB limit)
+        if (i < 25) {
+            return {
+                PutRequest: {
+                    Item: item
+                }
+            }
+        }
+        // return;
+    });
+    const request = {
+        RequestItems: {
+            [bdd]: items
+        }
+    }
+    return request;
 }

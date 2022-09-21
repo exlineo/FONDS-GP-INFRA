@@ -5,8 +5,10 @@ export interface LambdaI {
     name: string;
     file: string;
     lambda?: NodejsFunction;
-    table:string;
+    table?:string;
+    bucket?:string;
     methods:Array<any>;
+    layers?:Array<any>;
     origins?:Array<string>;
 }
 interface LambdasStackI{
@@ -25,7 +27,8 @@ export const collectionsStack:LambdasStackI = {
 const noticesLambdas:Array<LambdaI> = [
     { name: 'noticesget', file: 'get.ts', table:'notices', methods:['GET', 'HEAD'] },
     { name: 'noticesedit', file: 'edit.ts', table:'notices', methods:['POST', 'PUT', 'DELETE'] },
-    { name: 'oaipmh', file: 'oai-pmh.ts', table:'notices', methods:['GET', 'HEAD'] }
+    { name: 'xmp', file: 'xmp.ts', table:'notices', bucket:'sets', methods:['GET', 'HEAD', 'POST', 'PUT'], layers:[{name:'exiflayer', file:'./Lambdas/nodejs.zip'}] },
+    { name: 'oaipmh', file: 'oai-pmh.ts', table:'notices', methods:['GET', 'HEAD'] },
 ];
 export const noticesStack:LambdasStackI = {
     lambdas : noticesLambdas
