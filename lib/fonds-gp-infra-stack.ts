@@ -12,6 +12,7 @@ import { join } from 'path';
 
 import { collectionsStack, noticesStack, LambdaI, configStack } from '../models/lambdas';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { Duration } from 'aws-cdk-lib';
 
 export class FondsGpInfraStack extends cdk.Stack {
 
@@ -60,6 +61,7 @@ export class FondsGpInfraStack extends cdk.Stack {
       this.setItem(l, fUrl.url);
       // Give right to accessing database
       if(l.table) noticesStack.db!.grantReadWriteData(l.lambda);
+      if(l.bucket) buck.grantRead(l.lambda);
     });
   }
   /** Récupérer l'UID en paramètre qui permettra de créer des ressources en lien avec la pile
@@ -81,7 +83,7 @@ export class FondsGpInfraStack extends cdk.Stack {
   setLambda(l: LambdaI, db?: Table, buck?:Bucket) {
     const lambda = new NodejsFunction(this, l.name, {
       entry: join(__dirname, '../Lambdas', l.file),
-      ...this.setLambdaParams(l, db ?? db, buck ?? buck)
+      ...this.setLambdaParams(l, db ?? db, buck ?? buck, l.params?.memory ?? l.params?.memory, l.params?.duration ?? l.params?.duration)
     });
     return lambda;
   }
@@ -100,14 +102,15 @@ export class FondsGpInfraStack extends cdk.Stack {
     return db;
   }
   /** Set parameters for Lambdas */
-  setLambdaParams(l:LambdaI, db?:Table, buck?:Bucket): NodejsFunctionProps {
+  setLambdaParams(l:LambdaI, db?:Table, buck?:Bucket, memory:number=128, duration:number=3): NodejsFunctionProps {
     const params: NodejsFunctionProps = {
       // La librairie à ajouter
       bundling: {
         externalModules: ['aws-sdk', 'exiftool-vendored']
       },
       depsLockFilePath: join(__dirname, '../Lambdas', 'package-lock.json'),
-      memorySize: 128, // Paramètre pour montrer qu'il existe
+      memorySize: memory, // Gérer la taille de la mémoire de la lambda
+      timeout:cdk.Duration.seconds(duration),
       /** Donner des variables d'environnement pour les rendre accessibles à la lambda (transmises) */
       environment: {
         PRIMARY_KEY: 'id' + l.table,
@@ -167,7 +170,7 @@ export class FondsGpInfraStack extends cdk.Stack {
       this.edits[l.name] = url;
     }
   }
-  /** Create layers for lambdas */
+  /** Create layers for lambdas (up to 5) */
   setLayers(c:Array<any>){
     const layers:Array<any> = [];
     c.forEach(lay => {
@@ -184,7 +187,7 @@ export class FondsGpInfraStack extends cdk.Stack {
     });
     return layers;
   }
-  /** Save outputs  to get Lambdas URL list */
+  /** Save outputs to get Lambdas URL list */
   saveOutPut(table: string, item: any) {
     new cr.AwsCustomResource(this, 'configurationstable', {
       onCreate: {

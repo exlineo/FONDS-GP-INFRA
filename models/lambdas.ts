@@ -1,5 +1,6 @@
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
+import { Duration } from 'aws-cdk-lib';
 
 export interface LambdaI {
     name: string;
@@ -10,6 +11,7 @@ export interface LambdaI {
     methods:Array<any>;
     layers?:Array<any>;
     origins?:Array<string>;
+    params?:{memory?:number, duration?:number};
 }
 interface LambdasStackI{
     db?:Table;
@@ -27,7 +29,8 @@ export const collectionsStack:LambdasStackI = {
 const noticesLambdas:Array<LambdaI> = [
     { name: 'noticesget', file: 'get.ts', table:'notices', methods:['GET', 'HEAD', 'POST'] },
     { name: 'noticesedit', file: 'edit.ts', table:'notices', methods:['POST', 'PUT', 'DELETE'] },
-    { name: 'xmp', file: 'xmp.ts', table:'notices', bucket:'sets', methods:['GET', 'HEAD', 'POST', 'PUT'], layers:[{name:'exiflayer', file:'./Lambdas/nodejs.zip'}] },
+    // { name: 'xmp', file: 'xmp.ts', table:'notices', bucket:'sets', methods:['GET', 'HEAD', 'POST', 'PUT'], layers:[{name:'exiflayer', file:'./Lambdas/nodejs.zip'}] },
+    { name: 'xmp', file: 'xmp.ts', table:'notices', bucket:'sets', methods:['GET', 'HEAD', 'POST', 'PUT'], params:{memory:512, duration:300} },
     { name: 'oaipmh', file: 'oai-pmh.ts', table:'notices', methods:['GET', 'HEAD', 'POST'] },
 ];
 export const noticesStack:LambdasStackI = {

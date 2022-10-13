@@ -1,6 +1,6 @@
 import { L } from '../traductions/fr';
-import * as AWS from 'aws-sdk'; import { request } from 'http';
-;
+import * as AWS from 'aws-sdk';
+// import { request } from 'http';
 
 // Accessing DYnamoDB table
 const db = new AWS.DynamoDB.DocumentClient();
