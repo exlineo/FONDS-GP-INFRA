@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as S3 from 'aws-cdk-lib/aws-s3';
+import * as S3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as iam from 'aws-cdk-lib/aws-iam';
 // import console = require('console');
@@ -20,13 +21,20 @@ export class FondsGpInfraStack extends cdk.Stack {
   outputDB: any; // Database receiving configuration data from CDK (Lambdas Functions URLs)
   gets: any = {}; // Item with 'gets' lambdas
   edits: any = {}; // Item with 'edits' lambdas
+  nemaConfig:Bucket;
+  deploy:any;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
     this.UID = this.setStackParams(); // Get UID
-    // console.log('UID 👉 ', this.UID.valueAsString);
-    // this.outputDB = this.setDBTable(configStack.lambdas[0].table);
-    
+    // Create buckets
+    const buck:Bucket = new S3.Bucket(this, 'sets');
+    // Create config bucket and deploying file
+    this.nemaConfig = new S3.Bucket(this, 'nemateria-config');
+    this.deploy = new S3deploy.BucketDeployment(this, 'DeployWebsite', {
+      sources: [S3deploy.Source.asset('./Lambdas/bucketConfig')],
+      destinationBucket: this.nemaConfig
+    });
     // LAMBDAS
     // List needed to save configurations
     configStack.lambdas.forEach((l, i) => {
@@ -48,9 +56,6 @@ export class FondsGpInfraStack extends cdk.Stack {
       // Give right to accessing database
       if(l.table) collectionsStack.db!.grantReadWriteData(l.lambda);
     });
-    
-    // Créer un bucket
-    const buck:Bucket = new S3.Bucket(this, 'sets');
     // List needed notices
     noticesStack.lambdas.forEach((l, i) => {
       if (!noticesStack.db && l.table) noticesStack.db = this.setDBTable(l.table!);
@@ -59,9 +64,10 @@ export class FondsGpInfraStack extends cdk.Stack {
       // Create function URL for the Lambda
       const fUrl = l.lambda.addFunctionUrl(this.setFnUrl(l));
       this.setItem(l, fUrl.url);
-      // Give right to accessing database
+      // Giving rights to DB and buckets
       if(l.table) noticesStack.db!.grantReadWriteData(l.lambda);
       if(l.bucket) buck.grantRead(l.lambda);
+      this.nemaConfig.grantRead(l.lambda);
     });
   }
   /** Récupérer l'UID en paramètre qui permettra de créer des ressources en lien avec la pile
@@ -106,7 +112,7 @@ export class FondsGpInfraStack extends cdk.Stack {
     const params: NodejsFunctionProps = {
       // La librairie à ajouter
       bundling: {
-        externalModules: ['aws-sdk', 'exiftool-vendored']
+        externalModules: ['aws-sdk']
       },
       depsLockFilePath: join(__dirname, '../Lambdas', 'package-lock.json'),
       memorySize: memory, // Gérer la taille de la mémoire de la lambda
@@ -115,6 +121,7 @@ export class FondsGpInfraStack extends cdk.Stack {
       environment: {
         PRIMARY_KEY: 'id' + l.table,
         DB_T_NAME: db ? db.tableName : 'null', // Table ajoutée en paramètre d'environnement pour la récupérer dans la Lambda
+        NEMA_CONFIG: this.nemaConfig.bucketName,
         BUCKET: l.bucket ? buck!.bucketName : 'null'
       },
       runtime: lambda.Runtime.NODEJS_16_X,
