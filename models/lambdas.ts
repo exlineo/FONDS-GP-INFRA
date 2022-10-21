@@ -30,7 +30,6 @@ const noticesLambdas:Array<LambdaI> = [
     { name: 'noticesget', file: 'get.ts', table:'notices', methods:['GET', 'HEAD', 'POST'] },
     { name: 'noticesedit', file: 'edit.ts', table:'notices', methods:['POST', 'PUT', 'DELETE'] },
     // { name: 'xmp', file: 'xmp.ts', table:'notices', bucket:'sets', methods:['GET', 'HEAD', 'POST', 'PUT'], layers:[{name:'exiflayer', file:'./Lambdas/nodejs.zip'}] },
-    { name: 'xmp', file: 'xmp.ts', table:'notices', bucket:'sets', methods:['GET', 'HEAD', 'POST', 'PUT'], params:{memory:512, duration:300} },
     { name: 'oaipmh', file: 'oai-pmh.ts', table:'notices', methods:['GET', 'HEAD', 'POST'] },
 ];
 export const noticesStack:LambdasStackI = {
@@ -41,6 +40,7 @@ export const noticesStack:LambdasStackI = {
 const configLambdas:Array<LambdaI> = [
     { name: 'configget', file: 'get.ts', table:'configurations', methods:['GET', 'HEAD'] },
     { name: 'configedit', file: 'edit.ts', table:'configurations', methods:['POST', 'PUT', 'DELETE'] },
+    { name: 'xmp', file: 'xmp.ts', table:'configurations', bucket:'sets', methods:['GET', 'HEAD', 'POST'], params:{memory:512, duration:300} }
 ];
 export const configStack:LambdasStackI = {
     lambdas : configLambdas
