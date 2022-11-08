@@ -17,25 +17,28 @@ export const handler = async (event: any = {}): Promise<any> => {
   const metas = []; // List of final metadata to send
   const regXML = /<[^>]+\srdf\b[^>]*>/g; // Extract raw data from XMP
   const regFiltre = /:(.*?)"\n/g; // Filter data in XMP
-  const schemas:Array<string> = [];
+  const schemas:Array<string> = []; // List of all data to get in medias
+  const prefix:any = {}; // Object to store prefix and there schemas
 
-  // Get JSON Schema from bucket
+  /** Get schema from a file in a bucket (deprecated) */
   const params = {
     TableName: DB_T_NAME,
     Key: { [PRIMARY_KEY]: "schemas" }
   };
-  
+  /** Get metadata list in schemas from database */
   const response = await db.get(params).promise();
   if (response.Item) {
     for (let i in response.Item) {
-        if(response.Item[i].schema) response.Item[i].schema.values.forEach((v:any) => schemas.push(v));
+        if(response.Item[i].schema) {
+          // response.Item[i].schema.values.forEach((v:any) => schemas.push(v));
+          prefix[i] = response.Item[i];
+        };
       }
   } else {
       return { statusCode: 404, body: L.ER_DATA };
   }
-  
 
-  // End script if no body was send. Body is used as prefix to scan a specific folder
+  /** End script if no body was send. Body is used as prefix to scan a specific folder */
   const liste = await s3.listObjectsV2({ "Bucket": BUCKET, "Prefix": event.body }).promise();
   if (!event.body) {
     const dir: Array<string> = [];
@@ -61,10 +64,13 @@ export const handler = async (event: any = {}): Promise<any> => {
           data.push(exe[1]);
         }
         // List data to extract metadata from the namespaces
-        for (let i = 0; i < data.length; ++i) {
-          let tmp = data[i].split('="');
-          if (schemas.includes(tmp[0])) {
-            obj[tmp[0]] = tmp[1];
+        for (let j = 0; j < data.length; ++i) {
+          let tmp = data[j].split('="');
+          for(let j in prefix){
+            if(!obj[j]) obj[j] = {};
+            if (prefix[j].schema.values.includes(tmp[0])) {
+              obj[j][tmp[0]] = tmp[1];
+            }
           }
         }
         metas.push(obj);
