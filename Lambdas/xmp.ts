@@ -37,7 +37,7 @@ export const handler = async (event: any = {}): Promise<any> => {
   } else {
       return { statusCode: 404, body: L.ER_DATA };
   }
-
+  
   /** End script if no body was send. Body is used as prefix to scan a specific folder */
   const liste = await s3.listObjectsV2({ "Bucket": BUCKET, "Prefix": event.body }).promise();
   if (!event.body) {
@@ -57,14 +57,14 @@ export const handler = async (event: any = {}): Promise<any> => {
       // let { Body } = await s3.getObject({ "Bucket": BUCKET, "Key": liste.Contents![i].Key!, "Range": "bytes=0-4096" }).promise();
       let { Body } = await s3.getObject({ "Bucket": BUCKET, "Key": liste.Contents![i].Key! }).promise();
       let meta = regXML.exec(Body!.toString());
-
+      regXML.lastIndex = 0; // Réinitialisation de l'index du regex pour pour scanner tous les objet (ne scan qu'un sur deux sinon)
       if (meta) {
         // Extract data from raw file
         while (exe = regFiltre.exec(meta[0])) {
           data.push(exe[1]);
         }
         // List data to extract metadata from the namespaces
-        for (let j = 0; j < data.length; ++i) {
+        for (let j = 0; j < data.length; ++j) {
           let tmp = data[j].split('="');
           for(let j in prefix){
             if(!obj[j]) obj[j] = {};
