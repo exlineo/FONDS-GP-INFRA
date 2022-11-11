@@ -22,7 +22,7 @@ export const createItem = async (body: any, KEY: string, BDD: string) => {
     // Requête vers DynamoDB
     try {
         const response = await db.put(params).promise();
-        return { statusCode: 201, body: L.ADD };
+        return { statusCode: 201, body: response.ItemCollectionMetrics };
     } catch (er) {
         return { statusCode: 500, body: JSON.stringify(er) };
     }
@@ -30,8 +30,16 @@ export const createItem = async (body: any, KEY: string, BDD: string) => {
 /** Create list of objects */
 export const createListData = async (body: Array<any>, PRIMARY: string, BDD: string) => {
     try {
-        const response = await db.batchWrite(generateBatchListPut(body, BDD)).promise();
-        return { statusCode: 204, body: L.ADD }
+        let set = [];
+        let ids = [];
+        const n = Math.ceil(body.length / 25);
+        for(let i=0; i<= n; ++i){
+            const m = i*25;
+            set = body.slice(m, (i == n) ? body.length : m+25);
+            const response = await db.batchWrite(generateBatchListPut(set, BDD)).promise();
+            ids.push(response.ItemCollectionMetrics);
+        };
+        return { statusCode: 204, body: ids }
     } catch (er) {
         return { statusCode: 500, body: JSON.stringify(er) }
     }
@@ -62,7 +70,7 @@ export const updateData = async (body: any, KEY: string, BDD: string) => {
     // Requête vers DynamoDB
     try {
         const response = await db.update(params).promise();
-        return { statusCode: 204, body: L.UPDATE };
+        return { statusCode: 204, body: response.ItemCollectionMetrics };
     } catch (er: any) {
         // const errorResponse = er.code === 'ValidationException' && er.message.includes('reserved keyword') ?
         // DYNAMODB_EXECUTION_ERROR : RESERVED_RESPONSE;
@@ -81,12 +89,12 @@ export const deleteData = async (body: any, KEY: string, BDD: string) => {
     // Requête vers DynamoDB
     try {
         const response = await db.delete(params).promise();
-        return { statusCode: 200, body: L.DEL };
+        return { statusCode: 200, body: response.ItemCollectionMetrics };
     } catch (er) {
         return { statusCode: 500, body: JSON.stringify(er) };
     }
 }
-/** Générate batch put item request */
+/** Generate batch put item request */
 const generateBatchListPut = (body: Array<any>, bdd: string) => {
     const items: Array<any> = body.map((item: { PutRequest: { Item: any; } }, i: number) => {
         // Limit insert to 25 objects (dynamoDB limit)

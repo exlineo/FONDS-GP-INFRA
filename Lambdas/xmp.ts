@@ -16,7 +16,7 @@ export const handler = async (event: any = {}): Promise<any> => {
 
   const metas = []; // List of final metadata to send
   const regXML = /<[^>]+\srdf\b[^>]*>/g; // Extract raw data from XMP
-  const regFiltre = /:(.*?)"\n/g; // Filter data in XMP
+  const regFiltre = /:(.*?)"(\n|>)/g; // Filter data in XMP
   const schemas:Array<string> = []; // List of all data to get in medias
   const prefix:any = {}; // Object to store prefix and there schemas
 
