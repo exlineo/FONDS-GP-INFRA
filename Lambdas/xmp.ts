@@ -104,7 +104,12 @@ export const handler = async (event: any = {}): Promise<any> => {
           }
         }
       }
-      
+      // Ajouter les informations sur le média
+      if(!obj['oai_media']) obj['oai_media'] = {};
+      obj['oai_media']['size'] = liste.Contents[i].Size;
+      obj['oai_media']['url'] = BUCKET + '/' + liste.Contents[i].Key;
+      obj['oai_media']['file'] = liste.Contents[i].Key.split('/')[1];
+
       regXML.lastIndex = 0;
       regTags.lastIndex = 0;
       

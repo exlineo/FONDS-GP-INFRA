@@ -28,18 +28,22 @@ export const createItem = async (body: any, KEY: string, BDD: string) => {
     }
 }
 /** Create list of objects */
-export const createListData = async (body: Array<any>, PRIMARY: string, BDD: string) => {
+export const createListData = async (body: Array<any>, KEY: string, BDD: string) => {
     try {
-        let set = [];
+        let adds = [];
         let ids = [];
         const n = Math.ceil(body.length / 25);
-        for(let i=0; i<= n; ++i){
-            const m = i*25;
-            set = body.slice(m, (i == n) ? body.length : m+25);
-            const response = await db.batchWrite(generateBatchListPut(set, BDD)).promise();
-            ids.push(response.ItemCollectionMetrics);
+        for (let i = 0; i <= n; ++i) {
+            const m = i * 25;
+            adds = body.slice(m, (i == n) ? body.length : m + 25);
+            if (adds.length > 0) {
+                const response = await db.batchWrite(generateBatchListPut(adds, BDD)).promise();
+                ids.push(response.ItemCollectionMetrics);
+            } else {
+                break;
+            }
         };
-        return { statusCode: 204, body: ids }
+        return { statusCode: 200, body: ids }
     } catch (er) {
         return { statusCode: 500, body: JSON.stringify(er) }
     }
@@ -95,17 +99,13 @@ export const deleteData = async (body: any, KEY: string, BDD: string) => {
     }
 }
 /** Generate batch put item request */
-const generateBatchListPut = (body: Array<any>, bdd: string) => {
-    const items: Array<any> = body.map((item: { PutRequest: { Item: any; } }, i: number) => {
-        // Limit insert to 25 objects (dynamoDB limit)
-        if (i < 25) {
-            return {
-                PutRequest: {
-                    Item: item
-                }
+const generateBatchListPut = (adds: Array<any>, bdd: string) => {
+    const items: Array<any> = adds.map((item: { PutRequest: { Item: any; } }, i: number) => {
+        return {
+            PutRequest: {
+                Item: item
             }
         }
-        // return;
     });
     const request = {
         RequestItems: {
