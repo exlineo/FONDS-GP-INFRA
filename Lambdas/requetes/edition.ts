@@ -8,12 +8,12 @@ const db = new AWS.DynamoDB.DocumentClient();
 /** Create on PUT request */
 export const createData = async (body: any, KEY: string, BDD: string) => {
     if (Array.isArray(body)) {
-        return createListData(body, KEY, BDD);
+        return requestList(body, KEY, BDD, 'put');
     } else {
-        return createItem(body, KEY, BDD);
+        return createItem(body, BDD);
     }
 }
-export const createItem = async (body: any, KEY: string, BDD: string) => {
+const createItem = async (body: any, BDD: string) => {
     // Paramètres transmis dans la requête vers DynamoDB
     const params = {
         TableName: BDD,
@@ -25,27 +25,6 @@ export const createItem = async (body: any, KEY: string, BDD: string) => {
         return { statusCode: 201, body: response.ItemCollectionMetrics };
     } catch (er) {
         return { statusCode: 500, body: JSON.stringify(er) };
-    }
-}
-/** Create list of objects */
-export const createListData = async (body: Array<any>, KEY: string, BDD: string) => {
-    try {
-        let adds = [];
-        let ids = [];
-        const n = Math.ceil(body.length / 25);
-        for (let i = 0; i <= n; ++i) {
-            const m = i * 25;
-            adds = body.slice(m, (i == n) ? body.length : m + 25);
-            if (adds.length > 0) {
-                const response = await db.batchWrite(generateBatchListPut(adds, BDD)).promise();
-                ids.push(response.ItemCollectionMetrics);
-            } else {
-                break;
-            }
-        };
-        return { statusCode: 200, body: ids }
-    } catch (er) {
-        return { statusCode: 500, body: JSON.stringify(er) }
     }
 }
 /** Update on POST request */
@@ -81,35 +60,77 @@ export const updateData = async (body: any, KEY: string, BDD: string) => {
         return { statusCode: 500, body: JSON.stringify(er) };
     }
 }
-/** Delete collection */
+/** Delete item or list of items */
 export const deleteData = async (body: any, KEY: string, BDD: string) => {
+    if (Array.isArray(body)) {
+        return requestList(body, KEY, BDD, 'del');
+    } else {
+        return deleteItem(body, KEY, BDD);
+    }
+}
+/** Delete an item from database */
+const deleteItem = async (id: any, KEY: string, BDD: string) => {
     // Paramètres transmis dans la requête vers DynamoDB
     const params = {
         TableName: BDD,
-        Key: {
-            [KEY]: body[KEY]
-        }
+        Key: { [KEY]: id }
     };
-    // Requête vers DynamoDB
+    // Delete request on a single object
     try {
         const response = await db.delete(params).promise();
         return { statusCode: 200, body: response.ItemCollectionMetrics };
     } catch (er) {
         return { statusCode: 500, body: JSON.stringify(er) };
     }
+};
+/** Create list of objects */
+const requestList = async (body: Array<any>, KEY: string, BDD: string, type:string) => {
+    try {
+        let items = [];
+        const t = body.length;
+        const n = Math.floor(t / 25);
+        for (let i = 0; i <= n; ++i) {
+            const m = i * 25;
+            items = body.slice(m, (i == n) ? t : m + 25);
+            if (items.length > 0) {
+                const response = await db.batchWrite(generateBatch(items, KEY, BDD, type)).promise();
+            } else {
+                break;
+            }
+        };
+        return { statusCode: 200, body: { message:L.ADD }}
+    } catch (er) {
+        return { statusCode: 500, body: JSON.stringify(er) }
+    }
 }
 /** Generate batch put item request */
-const generateBatchListPut = (adds: Array<any>, bdd: string) => {
-    const items: Array<any> = adds.map((item: { PutRequest: { Item: any; } }, i: number) => {
-        return {
-            PutRequest: {
-                Item: item
-            }
+const generateBatch = (items: Array<any>, key: string, bdd: string, type: string) => {
+    const reqIems: Array<any> = items.map((item: any, i: number) => {
+        switch (type) {
+            case 'put':
+                return {
+                    PutRequest: {
+                        Item: item
+                    }
+                }
+            case 'up':
+                return {
+                    PutRequest: {
+                        Item: item
+                    }
+                }
+            case 'del':
+                return {
+                    DeleteRequest: {
+                        Key: { [key]: item }
+                    }
+                }
         }
+
     });
     const request = {
         RequestItems: {
-            [bdd]: items
+            [bdd]: reqIems
         }
     }
     return request;

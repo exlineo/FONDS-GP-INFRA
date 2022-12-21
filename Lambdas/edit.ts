@@ -12,7 +12,7 @@ export const handler = async (event: any = {}): Promise<any> => {
   const methode = event.requestContext.http.method;
   /** Vérifier que des données ont été envoyées */
   if (!event.body) {
-    return { statusCode: 400, body: L.ER_BODY };
+    return { statusCode: 400, body: { message : L.ER_BODY } };
   } else {
     // body = JSON.parse(event.body);
     body = typeof event.body == 'object' ? event.body : JSON.parse(event.body);
@@ -21,14 +21,11 @@ export const handler = async (event: any = {}): Promise<any> => {
   switch (methode) {
     case 'POST':
       return updateData(body, PRIMARY_KEY, DB_T_NAME);
-      break;
     case 'PUT':
       return createData(body, PRIMARY_KEY, DB_T_NAME);
-      break;
     case 'DELETE':
       return deleteData(body, PRIMARY_KEY, DB_T_NAME);
-      break;
     default:
-      return { statusCode: 500, body: L.ER_METHODE }
+      return { statusCode: 500, body: { message:L.ER_METHODE } }
   }
 }
