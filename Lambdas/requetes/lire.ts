@@ -23,11 +23,21 @@ export const getId = async (PRIMARY: string, KEY: string, BDD: string) => {
 /** Get many items from table with ids
  * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#batchGetItem-property
 */
-export const bacthGetId = async (PRIMARY: string, keys: Array<string>, BDD: string) => {
+export const bacthGetId = async (KEY: string, keys: Array<string>, BDD: string) => {
     // Get data from DynamoDB in table
     try {
-        const response = await db.batchGet(generateBatchListGet(PRIMARY, keys, BDD)).promise();
-        return { statusCode: 200, body: response }
+        let items:Array<any> = [];
+        let gap:Array<any> = [];
+        const n = Math.floor(keys.length / 100);
+        for (let i = 0; i <= n; ++i) {
+            const m = i * 100;
+            gap = keys.slice(m, (i == n) ? keys.length : m + 100);
+            if (gap.length > 0) {
+                const response:any = await db.batchGet(generateBatchListGet(KEY, gap, BDD)).promise();
+                items = items.concat(...response.Responses[BDD]);
+            }
+        }
+        return { statusCode: 200, body: items };
     } catch (er) {
         return { statusCode: 500, body: er }
     }
@@ -37,7 +47,7 @@ export const bacthGetId = async (PRIMARY: string, keys: Array<string>, BDD: stri
 /** Get all items for table (max 100) */
 export const getAll = async (BDD: string) => {
     // Paramètres transmis dans la requête vers DynamoDB
-    const params: { TableName: string} = {
+    const params: { TableName: string } = {
         TableName: BDD
     };
     // Get all data in table
@@ -49,9 +59,9 @@ export const getAll = async (BDD: string) => {
     }
 }
 /** Générate batch put item request */
-const generateBatchListGet = (PRIMARY:string, keys: Array<any>, bdd: string) => {
-    const ids: Array<any> = keys.map((id:string, i: number) => {
-       return { [PRIMARY] : id }
+const generateBatchListGet = (KEY: string, keys: Array<any>, bdd: string) => {
+    const ids: Array<any> = keys.map((id: string, i: number) => {
+        return { [KEY]: id }
     });
     const request = {
         RequestItems: {

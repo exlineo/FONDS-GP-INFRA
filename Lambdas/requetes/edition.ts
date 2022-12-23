@@ -94,8 +94,6 @@ const requestList = async (body: Array<any>, KEY: string, BDD: string, type:stri
             items = body.slice(m, (i == n) ? t : m + 25);
             if (items.length > 0) {
                 const response = await db.batchWrite(generateBatch(items, KEY, BDD, type)).promise();
-            } else {
-                break;
             }
         };
         return { statusCode: 200, body: { message:L.ADD }}
