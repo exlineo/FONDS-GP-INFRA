@@ -2,9 +2,9 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as S3 from 'aws-cdk-lib/aws-s3';
-import * as S3deploy from 'aws-cdk-lib/aws-s3-deployment';
+// import * as S3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as cr from 'aws-cdk-lib/custom-resources';
-import * as iam from 'aws-cdk-lib/aws-iam';
+// import * as iam from 'aws-cdk-lib/aws-iam';
 // import console = require('console');
 
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -12,8 +12,8 @@ import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { join } from 'path';
 
 import { collectionsStack, noticesStack, LambdaI, configStack } from '../models/lambdas';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
-import { Duration } from 'aws-cdk-lib';
+// import { Bucket } from 'aws-cdk-lib/aws-s3';
+// import { Duration } from 'aws-cdk-lib';
 
 export class FondsGpInfraStack extends cdk.Stack {
 
@@ -28,13 +28,8 @@ export class FondsGpInfraStack extends cdk.Stack {
     super(scope, id, props);
     this.UID = this.setStackParams(); // Get UID
     // Create buckets
-    const buck:Bucket = new S3.Bucket(this, 'sets');
-    // Create config bucket and deploying file
-    // this.nemaConfig = new S3.Bucket(this, 'nemateria-config');
-    // this.deploy = new S3deploy.BucketDeployment(this, 'DeployWebsite', {
-    //   sources: [S3deploy.Source.asset('./Lambdas/bucketConfig')],
-    //   destinationBucket: this.nemaConfig
-    // });
+    const buck:S3.Bucket = new S3.Bucket(this, 'sets');
+    buck.grantPublicAccess();
     // LAMBDAS
     // List needed to save configurations
     configStack.lambdas.forEach((l, i) => {
@@ -54,7 +49,7 @@ export class FondsGpInfraStack extends cdk.Stack {
       l.lambda = this.setLambda(l, collectionsStack.db!, l.bucket ? buck : undefined);
       // Create function URL for the Lambda
       l.lambda.addFunctionUrl(this.setFnUrl(l));
-      // Give right to accessing database
+      // Give right to accessing
       if(l.table) collectionsStack.db!.grantReadWriteData(l.lambda);
       if(l.bucket) buck.grantRead(l.lambda);
     });
@@ -88,7 +83,7 @@ export class FondsGpInfraStack extends cdk.Stack {
     return str + '-' + this.UID;
   }
   /** Create a lambda */
-  setLambda(l: LambdaI, db?: Table, buck?:Bucket) {
+  setLambda(l: LambdaI, db?: Table, buck?:S3.Bucket) {
     const lambda = new NodejsFunction(this, l.name, {
       entry: join(__dirname, '../Lambdas', l.file),
       ...this.setLambdaParams(l, db ?? db, buck ?? buck, l.params?.memory ?? l.params?.memory, l.params?.duration ?? l.params?.duration)
@@ -110,7 +105,7 @@ export class FondsGpInfraStack extends cdk.Stack {
     return db;
   }
   /** Set parameters for Lambdas */
-  setLambdaParams(l:LambdaI, db?:Table, buck?:Bucket, memory:number=128, duration:number=3): NodejsFunctionProps {
+  setLambdaParams(l:LambdaI, db?:Table, buck?:S3.Bucket, memory:number=128, duration:number=3): NodejsFunctionProps {
     const params: NodejsFunctionProps = {
       // La librairie à ajouter
       bundling: {
