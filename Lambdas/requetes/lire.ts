@@ -59,16 +59,30 @@ export const getAll = async (BDD: string) => {
     }
 }
 /** Générate batch put item request */
-const generateBatchListGet = (KEY: string, keys: Array<any>, bdd: string) => {
+const generateBatchListGet = (KEY: string, keys: Array<any>, BDD: string) => {
     const ids: Array<any> = keys.map((id: string, i: number) => {
         return { [KEY]: id }
     });
     const request = {
         RequestItems: {
-            [bdd]: {
+            [BDD]: {
                 Keys: ids
             }
         }
     }
     return request;
+}
+/** Search in database */
+export const search = async (BDD: string) => {
+    // Paramètres transmis dans la requête vers DynamoDB
+    const params: { TableName: string } = {
+        TableName: BDD
+    };
+    // Get all data in table
+    try {
+        const response = await db.scan(params).promise();
+        return response.Items;
+    } catch (er) {
+        return [];
+    }
 }

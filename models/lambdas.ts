@@ -1,6 +1,5 @@
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { Duration } from 'aws-cdk-lib';
 
 export interface LambdaI {
     name: string;
@@ -29,7 +28,7 @@ export const collectionsStack:LambdasStackI = {
 const noticesLambdas:Array<LambdaI> = [
     { name: 'noticesget', file: 'get.ts', table:'notices', methods:['GET', 'HEAD', 'POST'] },
     { name: 'noticesedit', file: 'edit.ts', table:'notices', methods:['POST', 'PUT', 'DELETE'] },
-    // { name: 'xmp', file: 'xmp.ts', table:'notices', bucket:'sets', methods:['GET', 'HEAD', 'POST', 'PUT'], layers:[{name:'exiflayer', file:'./Lambdas/nodejs.zip'}] },
+    { name: 'search', file: 'search.ts', table:'notices', methods:['GET', 'POST'], params:{memory:512, duration:300} },
     { name: 'oaipmh', file: 'oai-pmh.ts', table:'notices', methods:['GET', 'HEAD', 'POST'] },
 ];
 export const noticesStack:LambdasStackI = {

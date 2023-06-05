@@ -13,7 +13,6 @@ import { join } from 'path';
 
 import { collectionsStack, noticesStack, LambdaI, configStack } from '../models/lambdas';
 // import { Bucket } from 'aws-cdk-lib/aws-s3';
-// import { Duration } from 'aws-cdk-lib';
 
 export class FondsGpInfraStack extends cdk.Stack {
 

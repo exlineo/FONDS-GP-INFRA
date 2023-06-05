@@ -42,3 +42,7 @@ export interface CompteI {
     email:string;
     statut:number;
 }
+export interface SearchI {
+    collection:string;
+    libre:Array<string>;
+}
