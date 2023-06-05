@@ -57,7 +57,7 @@ export class FGPApiStack extends Stack {
                     'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
                     'method.response.header.Access-Control-Allow-Origin': "'*'",
                     'method.response.header.Access-Control-Allow-Credentials': "'false'",
-                    'method.response.header.Access-Control-Allow-Methods': methods,
+                    'method.response.header.Access-Control-Allow-Methods': "'GET,POST,HEAD,PUT,DELETE,PATCH'",
                 },
             }],
             passthroughBehavior: PassthroughBehavior.NEVER,
