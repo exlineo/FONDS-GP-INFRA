@@ -22,9 +22,11 @@ const createItem = async (body: any, BDD: string) => {
     // Requête vers DynamoDB
     try {
         const response = await db.put(params).promise();
-        return { statusCode: 201, body: response.ItemCollectionMetrics };
+        // return { statusCode: 201, body: response.ItemCollectionMetrics };
+        return response.ItemCollectionMetrics;
     } catch (er) {
-        return { statusCode: 500, body: JSON.stringify(er) };
+        // return { statusCode: 500, body: JSON.stringify(er) };
+        return er;
     }
 }
 /** Update on POST request */
@@ -53,11 +55,13 @@ export const updateData = async (body: any, KEY: string, BDD: string) => {
     // Requête vers DynamoDB
     try {
         const response = await db.update(params).promise();
-        return { statusCode: 204, body: response.ItemCollectionMetrics };
+        // return { statusCode: 204, body: response.ItemCollectionMetrics };
+        return response.ItemCollectionMetrics;
     } catch (er: any) {
         // const errorResponse = er.code === 'ValidationException' && er.message.includes('reserved keyword') ?
         // DYNAMODB_EXECUTION_ERROR : RESERVED_RESPONSE;
-        return { statusCode: 500, body: JSON.stringify(er) };
+        // return { statusCode: 500, body: JSON.stringify(er) };
+        return er;
     }
 }
 /** Delete item or list of items */
@@ -78,9 +82,11 @@ const deleteItem = async (id: any, KEY: string, BDD: string) => {
     // Delete request on a single object
     try {
         const response = await db.delete(params).promise();
-        return { statusCode: 200, body: response.ItemCollectionMetrics };
+        // return { statusCode: 200, body: response.ItemCollectionMetrics };
+        return response.ItemCollectionMetrics;
     } catch (er) {
-        return { statusCode: 500, body: JSON.stringify(er) };
+        // return { statusCode: 500, body: JSON.stringify(er) };
+        return er;
     }
 };
 /** Create list of objects */
@@ -96,9 +102,11 @@ const requestList = async (body: Array<any>, KEY: string, BDD: string, type:stri
                 const response = await db.batchWrite(generateBatch(items, KEY, BDD, type)).promise();
             }
         };
-        return { statusCode: 200, body: { message:L.ADD }}
+        // return { statusCode: 200, body: { message:L.ADD }}
+        return { message:L.ADD };
     } catch (er) {
-        return { statusCode: 500, body: JSON.stringify(er) }
+        // return { statusCode: 500, body: JSON.stringify(er) }
+        return er;
     }
 }
 /** Generate batch put item request */

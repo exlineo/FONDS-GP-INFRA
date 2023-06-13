@@ -12,7 +12,8 @@ export const getId = async (PRIMARY: string, KEY: string, BDD: string) => {
     try {
         const response = await db.get(params).promise();
         if (response.Item) {
-            return { statusCode: 200, body: response.Item };
+            // return { statusCode: 200, body: response.Item };
+            return response.Item;
         } else {
             return { statusCode: 404 };
         }
@@ -37,9 +38,11 @@ export const bacthGetId = async (KEY: string, keys: Array<string>, BDD: string) 
                 items = items.concat(...response.Responses[BDD]);
             }
         }
-        return { statusCode: 200, body: items };
+        // return { statusCode: 200, body: items };
+        return items;
     } catch (er) {
-        return { statusCode: 500, body: er }
+        // return { statusCode: 500, body: er }
+        return er;
     }
 }
 /** Get many items from many tables */
@@ -53,9 +56,11 @@ export const getAll = async (BDD: string) => {
     // Get all data in table
     try {
         const response = await db.scan(params).promise();
-        return { statusCode: 200, body: response.Items };
+        // return { statusCode: 200, body: response.Items };
+        return response.Items;
     } catch (er) {
-        return { statusCode: 500, body: er };
+        // return { statusCode: 500, body: er };
+        return er;
     }
 }
 /** Générate batch put item request */
@@ -83,6 +88,6 @@ export const search = async (BDD: string) => {
         const response = await db.scan(params).promise();
         return response.Items;
     } catch (er) {
-        return [];
+        return er;
     }
 }

@@ -20,9 +20,9 @@ export const handler = async (event: any = {}): Promise<any> => {
   /** Create, update, delete */
   switch (methode) {
     case 'POST':
-      return updateData(body, PRIMARY_KEY, DB_T_NAME);
-    case 'PUT':
       return createData(body, PRIMARY_KEY, DB_T_NAME);
+    case 'PUT':
+      return updateData(body, PRIMARY_KEY, DB_T_NAME);
     case 'DELETE':
       return deleteData(body, PRIMARY_KEY, DB_T_NAME);
     default:

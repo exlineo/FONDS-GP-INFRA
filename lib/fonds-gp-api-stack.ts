@@ -1,4 +1,4 @@
-import { IResource, LambdaIntegration, MockIntegration, PassthroughBehavior, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { IResource, LambdaIntegration, MockIntegration, PassthroughBehavior, RestApi, IntegrationResponse, ContentHandling, MethodResponse } from 'aws-cdk-lib/aws-apigateway';
 import { App, Stack, StackProps } from 'aws-cdk-lib';
 
 import { collectionsStack, noticesStack, LambdaI, configStack } from '../models/lambdas';
@@ -8,6 +8,24 @@ export class FGPApiStack extends Stack {
 
     lambdas:any;
     api:RestApi;
+    intResp:Array<IntegrationResponse> = [{
+            statusCode: '200',
+            responseParameters: {
+                'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                'method.response.header.Access-Control-Allow-Origin': "'*'",
+                'method.response.header.Access-Control-Allow-Credentials': "'false'",
+                'method.response.header.Access-Control-Allow-Methods': "'GET,POST,HEAD,PUT,DELETE,PATCH'",
+            }
+        }];
+    metResp:Array<MethodResponse> = [{
+            statusCode: '200',
+            responseParameters: {
+                'method.response.header.Access-Control-Allow-Headers': true,
+                'method.response.header.Access-Control-Allow-Methods': true,
+                'method.response.header.Access-Control-Allow-Credentials': true,
+                'method.response.header.Access-Control-Allow-Origin': true,
+            },
+        }];
 
     constructor(app: App, id: string, props?:StackProps) {
         super(app, id);
@@ -40,10 +58,15 @@ export class FGPApiStack extends Stack {
     // Create lambda integration and add mehods and cors to API route
     setAPIResourceMethods(resource:IResource, methods:Array<string>, lambda:any){
         // Create integration with the lambda inside l
-        const lambdaIntegration = new LambdaIntegration(lambda as IFunction);
+        const lambdaIntegration = new LambdaIntegration(lambda as IFunction, { 
+            proxy: false,
+            integrationResponses:this.intResp
+         });
         // Add methods in route
         methods.forEach( m => {
-            resource.addMethod(m, lambdaIntegration);
+            resource.addMethod(m, lambdaIntegration, {
+                methodResponses:this.metResp
+            });
         });
         // Add cors for route
         this.addCorsOptions(resource, methods.toString());
