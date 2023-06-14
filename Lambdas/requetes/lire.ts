@@ -13,12 +13,12 @@ export const getId = async (PRIMARY: string, KEY: string, BDD: string) => {
         const response = await db.get(params).promise();
         if (response.Item) {
             // return { statusCode: 200, body: response.Item };
-            return response.Item;
+            return {statusCode:200, body: JSON.stringify(response.Item)};
         } else {
             return { statusCode: 404 };
         }
     } catch (er) {
-        return { statusCode: 500, body: er };
+        return { statusCode: 500, body : JSON.stringify(er) };
     }
 }
 /** Get many items from table with ids
@@ -38,11 +38,11 @@ export const bacthGetId = async (KEY: string, keys: Array<string>, BDD: string) 
                 items = items.concat(...response.Responses[BDD]);
             }
         }
-        // return { statusCode: 200, body: items };
-        return items;
+        return { statusCode: 200, body: JSON.stringify(items) };
+        // return items;
     } catch (er) {
-        // return { statusCode: 500, body: er }
-        return er;
+        return { statusCode: 500, body : JSON.stringify(er) }
+        // return er;
     }
 }
 /** Get many items from many tables */
@@ -56,11 +56,11 @@ export const getAll = async (BDD: string) => {
     // Get all data in table
     try {
         const response = await db.scan(params).promise();
-        // return { statusCode: 200, body: response.Items };
-        return response.Items;
+        return { statusCode: 200, body: JSON.stringify(response.Items) };
+        // return response.Items;
     } catch (er) {
-        // return { statusCode: 500, body: er };
-        return er;
+        return { statusCode: 500, body : JSON.stringify(er) };
+        // return er;
     }
 }
 /** Générate batch put item request */
@@ -78,7 +78,7 @@ const generateBatchListGet = (KEY: string, keys: Array<any>, BDD: string) => {
     return request;
 }
 /** Search in database */
-export const search = async (BDD: string) => {
+export const search = async (KEY:string, body:any, BDD: string) => {
     // Paramètres transmis dans la requête vers DynamoDB
     const params: { TableName: string } = {
         TableName: BDD
@@ -86,8 +86,9 @@ export const search = async (BDD: string) => {
     // Get all data in table
     try {
         const response = await db.scan(params).promise();
-        return response.Items;
+        return {statusCode:200, body: JSON.stringify(response.Items)};
+        // return response.Items;
     } catch (er) {
-        return er;
+        return { statusCode: 500, body : JSON.stringify(er) };
     }
 }

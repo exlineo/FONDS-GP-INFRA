@@ -1,4 +1,4 @@
-import { IResource, LambdaIntegration, MockIntegration, PassthroughBehavior, RestApi, IntegrationResponse, ContentHandling, MethodResponse } from 'aws-cdk-lib/aws-apigateway';
+import { IResource, LambdaIntegration, MockIntegration, PassthroughBehavior, RestApi, IntegrationResponse, ContentHandling, MethodResponse, RestApiProps } from 'aws-cdk-lib/aws-apigateway';
 import { App, Stack, StackProps } from 'aws-cdk-lib';
 
 import { collectionsStack, noticesStack, LambdaI, configStack } from '../models/lambdas';
@@ -32,7 +32,9 @@ export class FGPApiStack extends Stack {
 
         // Create an API Gateway resource for each of the CRUD operations
         this.api = new RestApi(this, 'FGPInfraApi', {
-            restApiName: 'FGP API Rest'
+            restApiName: 'FGP API Rest',
+            cloudWatchRole : true, // Add role to cloudwatch
+            // deploy: false // Force deploylent on deploy
         });
         // Create routes in API
         this.setAPIResource(configStack.lambdas, 'config');
@@ -59,7 +61,7 @@ export class FGPApiStack extends Stack {
     setAPIResourceMethods(resource:IResource, methods:Array<string>, lambda:any){
         // Create integration with the lambda inside l
         const lambdaIntegration = new LambdaIntegration(lambda as IFunction, { 
-            proxy: false,
+            proxy: true,
             integrationResponses:this.intResp
          });
         // Add methods in route

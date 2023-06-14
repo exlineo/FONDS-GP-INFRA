@@ -8,8 +8,7 @@ const PRIMARY_KEY = process.env.PRIMARY_KEY || '';
 export const handler = async (event: any = {}): Promise<any> => {
 
   let body: any = null;
-
-  const methode = event.requestContext.http.method;
+  const methode = event.requestContext.httpMethod;
   /** Vérifier que des données ont été envoyées */
   if (!event.body) {
     return { statusCode: 400, body: { message : L.ER_BODY } };

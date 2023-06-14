@@ -10,7 +10,7 @@ const db = new AWS.DynamoDB.DocumentClient();
 
 export const handler = async (event: any = {}): Promise<any> => {
   // Get data from request (if there'is)
-  
+  console.log(event);
   const body = event.body ? JSON.parse(event.body) : null;
 
   if(body && typeof body === 'string') {
