@@ -1,4 +1,4 @@
-import { IResource, LambdaIntegration, MockIntegration, PassthroughBehavior, RestApi, IntegrationResponse, ContentHandling, MethodResponse, RestApiProps } from 'aws-cdk-lib/aws-apigateway';
+import { IResource, LambdaIntegration, MockIntegration, PassthroughBehavior, RestApi, IntegrationResponse, Cors, MethodResponse, RestApiProps } from 'aws-cdk-lib/aws-apigateway';
 import { App, Stack, StackProps } from 'aws-cdk-lib';
 
 import { collectionsStack, noticesStack, LambdaI, configStack } from '../models/lambdas';
@@ -33,8 +33,11 @@ export class FGPApiStack extends Stack {
         // Create an API Gateway resource for each of the CRUD operations
         this.api = new RestApi(this, 'FGPInfraApi', {
             restApiName: 'FGP API Rest',
+            defaultCorsPreflightOptions: {
+                allowOrigins: Cors.ALL_ORIGINS
+              },
             cloudWatchRole : true, // Add role to cloudwatch
-            // deploy: false // Force deploylent on deploy
+            // deploy: false // Force deployment on deploy
         });
         // Create routes in API
         this.setAPIResource(configStack.lambdas, 'config');
@@ -64,14 +67,14 @@ export class FGPApiStack extends Stack {
             proxy: true,
             integrationResponses:this.intResp
          });
-        // Add methods in route
+        // Add methods in route from the methode of the resource
         methods.forEach( m => {
             resource.addMethod(m, lambdaIntegration, {
                 methodResponses:this.metResp
             });
         });
         // Add cors for route
-        this.addCorsOptions(resource, methods.toString());
+        // this.addCorsOptions(resource, methods.toString());
     }
     // Adding CORS to resource
     addCorsOptions(apiResource: IResource, methods:string) {
@@ -82,7 +85,7 @@ export class FGPApiStack extends Stack {
                     'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
                     'method.response.header.Access-Control-Allow-Origin': "'*'",
                     'method.response.header.Access-Control-Allow-Credentials': "'false'",
-                    'method.response.header.Access-Control-Allow-Methods': "'GET,POST,HEAD,PUT,DELETE,PATCH'",
+                    'method.response.header.Access-Control-Allow-Methods': "'GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS'",
                 },
             }],
             passthroughBehavior: PassthroughBehavior.NEVER,
