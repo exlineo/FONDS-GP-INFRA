@@ -8,6 +8,7 @@ export class FGPApiStack extends Stack {
 
     lambdas:any;
     api:RestApi;
+    
     intResp:Array<IntegrationResponse> = [{
             statusCode: '200',
             responseParameters: {
