@@ -27,33 +27,35 @@ export const handler = async (event: any = {}): Promise<any> => {
     TableName: DB_T_NAME,
     Key: { [PRIMARY_KEY]: "schemas" }
   };
-  /** Get metadata list in schemas from database */
-  const response = await db.get(params).promise();
-  if (response.Item) {
-    for (let i in response.Item) {
-        if(response.Item[i].schema) {
-          // response.Item[i].schema.values.forEach((v:any) => schemas.push(v));
-          prefix[i] = response.Item[i];
-        };
-      }
-  } else {
-      return { statusCode: 404, body: L.ER_DATA };
-  }
-  
+  // Get body or not
+  const body = event.body ? event.body : '';
   /** End script if no body was send. Body is used as prefix to scan a specific folder */
-  const liste:any = await s3.listObjectsV2({ "Bucket": BUCKET, "Prefix": event.body }).promise();
+  const liste:any = await s3.listObjectsV2({ "Bucket": BUCKET, "Prefix": body }).promise();
   if (!event.body) {
     const dir: Array<string> = [];
     for (let i = 0; i < liste.Contents!.length; ++i) {
       const fold = liste.Contents![i].Key!.split('/')[0];
       if (!dir.includes(fold)) dir.push(fold);
     }
-    return { statusCode: 200, body: dir };
+    // return { statusCode: 200, body: dir };
+    return dir;
   } else {
+    /** Get metadata list in schemas from database */
+    const response = await db.get(params).promise();
+    if (response.Item) {
+      for (let i in response.Item) {
+          if(response.Item[i].schema) {
+            // response.Item[i].schema.values.forEach((v:any) => schemas.push(v));
+            prefix[i] = response.Item[i];
+          };
+        }
+    } else {
+        // return { statusCode: 404, body: L.ER_DATA };
+        return L.ER_DATA
+    }
     // Get data from objects
     for (let i = 0; i < liste.Contents!.length; ++i) {
       let { Body } = await s3.getObject({ "Bucket": BUCKET, "Key": liste.Contents[i].Key }).promise();
-      
       let exe;
       const obj:any = {};
       // console.log(Body.toString());
@@ -107,7 +109,7 @@ export const handler = async (event: any = {}): Promise<any> => {
       // Ajouter les informations sur le média
       if(!obj['oai_media']) obj['oai_media'] = {};
       obj['oai_media']['size'] = liste.Contents[i].Size;
-      obj['oai_media']['url'] = 'https://' + BUCKET + '/.s3.eu-west-3.amazonaws.com/' + liste.Contents[i].Key;
+      obj['oai_media']['url'] = 'https://' + BUCKET + '.s3.eu-west-3.amazonaws.com/' + liste.Contents[i].Key;
       obj['oai_media']['file'] = liste.Contents[i].Key.split('/')[1];
 
       regXML.lastIndex = 0;
@@ -115,7 +117,7 @@ export const handler = async (event: any = {}): Promise<any> => {
       
       metas.push(obj);
     }
-    // console.log(metas);
-    return { statusCode: 200, body: metas };
+    // return { statusCode: 200, body: metas };
+    return metas;
   }
 }

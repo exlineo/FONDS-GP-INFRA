@@ -34,7 +34,9 @@ export class FGPApiStack extends Stack {
         this.api = new RestApi(this, 'FGPInfraApi', {
             restApiName: 'FGP API Rest',
             defaultCorsPreflightOptions: {
-                allowOrigins: Cors.ALL_ORIGINS
+                allowOrigins: Cors.ALL_ORIGINS,
+                // allowOrigins : ['https://archives-en-commun.org', 'https://www.archives-en-commun.org', 'https://admincloud.archives-en-commun.org'],
+                allowHeaders: Cors.DEFAULT_HEADERS.concat(['x-api-key'])
               },
             cloudWatchRole : true, // Add role to cloudwatch
             // deploy: false // Force deployment on deploy
@@ -48,23 +50,43 @@ export class FGPApiStack extends Stack {
     setAPIResource(lambdas:Array<LambdaI>, name:string){
         const root = this.api.root.addResource(name);
         lambdas.forEach( l => {
-            // If lambda is for edition
-            if(l.file == 'edit.ts') {
-                const edit = root.addResource('edit');
-                this.setAPIResourceMethods(edit, l.methods, l.lambda!);
-            }else if(l.file == "get.ts"){
-                this.setAPIResourceMethods(root, l.methods, l.lambda!);
-            }else{
-                const res = this.api.root.addResource(l.name);
-                this.setAPIResourceMethods(res, l.methods, l.lambda!);
+            switch(l.file){
+                case "create.ts":
+                    const create = root.addResource('create');
+                    this.setAPIResourceMethods(create, l.methods, l.lambda!);
+                    break;
+                case "update.ts":
+                    const update = root.addResource('update');
+                    this.setAPIResourceMethods(update, l.methods, l.lambda!);
+                    break;
+                case "delete.ts":
+                    const del = root.addResource('delete');
+                    this.setAPIResourceMethods(del, l.methods, l.lambda!);
+                    break;
+                case "get.ts":
+                    this.setAPIResourceMethods(root, l.methods, l.lambda!);
+                    break;
+                default :
+                    const res = this.api.root.addResource(l.name);
+                    this.setAPIResourceMethods(res, l.methods, l.lambda!)
             }
+            // If lambda is for edition
+            // if(l.file == 'edit.ts') {
+            //     const edit = root.addResource('edit');
+            //     this.setAPIResourceMethods(edit, l.methods, l.lambda!);
+            // }else if(l.file == "get.ts"){
+            //     this.setAPIResourceMethods(root, l.methods, l.lambda!);
+            // }else{
+            //     const res = this.api.root.addResource(l.name);
+            //     this.setAPIResourceMethods(res, l.methods, l.lambda!);
+            // }
         })
     }
     // Create lambda integration and add mehods and cors to API route
     setAPIResourceMethods(resource:IResource, methods:Array<string>, lambda:any){
         // Create integration with the lambda inside l
         const lambdaIntegration = new LambdaIntegration(lambda as IFunction, { 
-            proxy: true,
+            proxy: false,
             integrationResponses:this.intResp
          });
         // Add methods in route from the methode of the resource
@@ -77,31 +99,31 @@ export class FGPApiStack extends Stack {
         // this.addCorsOptions(resource, methods.toString());
     }
     // Adding CORS to resource
-    addCorsOptions(apiResource: IResource, methods:string) {
-        apiResource.addMethod('OPTIONS', new MockIntegration({
-            integrationResponses: [{
-                statusCode: '200',
-                responseParameters: {
-                    'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                    'method.response.header.Access-Control-Allow-Origin': "'*'",
-                    'method.response.header.Access-Control-Allow-Credentials': "'false'",
-                    'method.response.header.Access-Control-Allow-Methods': "'GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS'",
-                },
-            }],
-            passthroughBehavior: PassthroughBehavior.NEVER,
-            requestTemplates: {
-                "application/json": "{\"statusCode\": 200}"
-            },
-        }), {
-            methodResponses: [{
-                statusCode: '200',
-                responseParameters: {
-                    'method.response.header.Access-Control-Allow-Headers': true,
-                    'method.response.header.Access-Control-Allow-Methods': true,
-                    'method.response.header.Access-Control-Allow-Credentials': true,
-                    'method.response.header.Access-Control-Allow-Origin': true,
-                },
-            }]
-        })
-    }
+    // addCorsOptions(apiResource: IResource, methods:string) {
+    //     apiResource.addMethod('OPTIONS', new MockIntegration({
+    //         integrationResponses: [{
+    //             statusCode: '200',
+    //             responseParameters: {
+    //                 'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+    //                 'method.response.header.Access-Control-Allow-Origin': "'*'",
+    //                 'method.response.header.Access-Control-Allow-Credentials': "'false'",
+    //                 'method.response.header.Access-Control-Allow-Methods': "'GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS'",
+    //             },
+    //         }],
+    //         passthroughBehavior: PassthroughBehavior.NEVER,
+    //         requestTemplates: {
+    //             "application/json": "{\"statusCode\": 200}"
+    //         },
+    //     }), {
+    //         methodResponses: [{
+    //             statusCode: '200',
+    //             responseParameters: {
+    //                 'method.response.header.Access-Control-Allow-Headers': true,
+    //                 'method.response.header.Access-Control-Allow-Methods': true,
+    //                 'method.response.header.Access-Control-Allow-Credentials': true,
+    //                 'method.response.header.Access-Control-Allow-Origin': true,
+    //             },
+    //         }]
+    //     })
+    // }
 }

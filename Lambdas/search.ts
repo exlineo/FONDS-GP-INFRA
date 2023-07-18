@@ -14,7 +14,7 @@ export const handler = async (event: any = {}): Promise<any> => {
   // Waiting body as {collection:string, libre:Array<string>}
   const body = event.body ? JSON.parse(event.body) : null;
   if (notices.length == 0) {
-    notices = await search(DB_T_NAME);
+    notices = await search(PRIMARY_KEY, body, DB_T_NAME);
   }
   if (body) {
     results = notices.filter((n:any) => {

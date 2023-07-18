@@ -27,7 +27,15 @@ export class FondsGpInfraStack extends cdk.Stack {
     super(scope, id, props);
     this.UID = this.setStackParams(); // Get UID
     // Create buckets
-    const buck:S3.Bucket = new S3.Bucket(this, 'sets');
+    const buck:S3.Bucket = new S3.Bucket(this, 'fgpsets', {
+      publicReadAccess: true,
+      blockPublicAccess: new S3.BlockPublicAccess({
+        blockPublicAcls: false,
+        ignorePublicAcls: false,
+        blockPublicPolicy: false,
+        restrictPublicBuckets: false,
+      })
+    });
     buck.grantPublicAccess();
     // LAMBDAS
     // List needed to save configurations
@@ -93,7 +101,7 @@ export class FondsGpInfraStack extends cdk.Stack {
   setDBTable(table: string): Table {
     const db = new Table(this, table, {
       partitionKey: {
-        name: 'id' + table,
+        name: 'id' + table.substring(3,table.length-1),
         type: AttributeType.STRING
       },
       tableName: table,
@@ -115,7 +123,7 @@ export class FondsGpInfraStack extends cdk.Stack {
       timeout:cdk.Duration.seconds(duration),
       /** Donner des variables d'environnement pour les rendre accessibles à la lambda (transmises) */
       environment: {
-        PRIMARY_KEY: 'id' + l.table,
+        PRIMARY_KEY: 'id' + l.table?.substring(3, l.table?.length-1),
         DB_T_NAME: db ? db.tableName : 'null', // Table ajoutée en paramètre d'environnement pour la récupérer dans la Lambda
         BUCKET: l.bucket ? buck!.bucketName : 'null'
       },
