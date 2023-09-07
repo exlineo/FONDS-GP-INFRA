@@ -6,7 +6,7 @@ import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-node
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { join } from 'path';
 
-import { LambdaI } from '../models/lambdas';
+import { LambdaI } from '../../models/lambdas';
 
 /** Generical properties for cors */
 const fnURL = {

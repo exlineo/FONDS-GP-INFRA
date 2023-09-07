@@ -114,7 +114,7 @@ export class FondsGpInfraStack extends cdk.Stack {
   /** Set parameters for Lambdas */
   setLambdaParams(l:LambdaI, db?:Table, buck?:S3.Bucket, memory:number=128, duration:number=3): NodejsFunctionProps {
     const params: NodejsFunctionProps = {
-      // La librairie à ajouter
+      // Library to add
       bundling: {
         externalModules: ['aws-sdk']
       },
@@ -127,7 +127,7 @@ export class FondsGpInfraStack extends cdk.Stack {
         DB_T_NAME: db ? db.tableName : 'null', // Table ajoutée en paramètre d'environnement pour la récupérer dans la Lambda
         BUCKET: l.bucket ? buck!.bucketName : 'null'
       },
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
       layers: l.layers ? this.setLayers(l.layers) : []
     };
     return params;

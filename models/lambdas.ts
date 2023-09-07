@@ -10,6 +10,7 @@ export interface LambdaI {
     methods:Array<any>;
     layers?:Array<any>;
     origins?:Array<string>;
+    proxy?:boolean;
     params?:{memory?:number, duration?:number};
 }
 interface LambdasStackI{
@@ -35,7 +36,7 @@ const noticesLambdas:Array<LambdaI> = [
     { name: 'noticesUpdate', file: 'update.ts', table:'fgpnotices', methods:['PUT'] },
     { name: 'noticesDel', file: 'delete.ts', table:'fgpnotices', methods:['DELETE'] },
     { name: 'search', file: 'search.ts', table:'fgpnotices', methods:['GET', 'POST'], params:{memory:512, duration:300} },
-    { name: 'oaipmh', file: 'oai-pmh.ts', table:'fgpnotices', methods:['GET', 'HEAD', 'POST'] },
+    { name: 'oaipmh', file: 'oai-pmh.ts', table:'fgpnotices', methods:['GET', 'HEAD', 'POST'], proxy:true },
 ];
 export const noticesStack:LambdasStackI = {
     lambdas : noticesLambdas

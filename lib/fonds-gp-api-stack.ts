@@ -6,28 +6,28 @@ import { IFunction } from 'aws-cdk-lib/aws-lambda';
 
 export class FGPApiStack extends Stack {
 
-    lambdas:any;
-    api:RestApi;
-    intResp:Array<IntegrationResponse> = [{
-            statusCode: '200',
-            responseParameters: {
-                'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                'method.response.header.Access-Control-Allow-Origin': "'*'",
-                'method.response.header.Access-Control-Allow-Credentials': "'false'",
-                'method.response.header.Access-Control-Allow-Methods': "'GET,POST,HEAD,PUT,DELETE,PATCH'",
-            }
-        }];
-    metResp:Array<MethodResponse> = [{
-            statusCode: '200',
-            responseParameters: {
-                'method.response.header.Access-Control-Allow-Headers': true,
-                'method.response.header.Access-Control-Allow-Methods': true,
-                'method.response.header.Access-Control-Allow-Credentials': true,
-                'method.response.header.Access-Control-Allow-Origin': true,
-            },
-        }];
+    lambdas: any;
+    api: RestApi;
+    intResp: Array<IntegrationResponse> = [{
+        statusCode: '200',
+        responseParameters: {
+            'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+            'method.response.header.Access-Control-Allow-Credentials': "'false'",
+            'method.response.header.Access-Control-Allow-Methods': "'GET,POST,HEAD,PUT,DELETE,PATCH'",
+        }
+    }];
+    metResp: Array<MethodResponse> = [{
+        statusCode: '200',
+        responseParameters: {
+            'method.response.header.Access-Control-Allow-Headers': true,
+            'method.response.header.Access-Control-Allow-Methods': true,
+            'method.response.header.Access-Control-Allow-Credentials': true,
+            'method.response.header.Access-Control-Allow-Origin': true,
+        },
+    }];
 
-    constructor(app: App, id: string, props?:StackProps) {
+    constructor(app: App, id: string, props?: StackProps) {
         super(app, id);
 
         // Create an API Gateway resource for each of the CRUD operations
@@ -37,8 +37,8 @@ export class FGPApiStack extends Stack {
                 allowOrigins: Cors.ALL_ORIGINS,
                 // allowOrigins : ['https://archives-en-commun.org', 'https://www.archives-en-commun.org', 'https://admincloud.archives-en-commun.org'],
                 allowHeaders: Cors.DEFAULT_HEADERS.concat(['x-api-key'])
-              },
-            cloudWatchRole : true, // Add role to cloudwatch
+            },
+            cloudWatchRole: true, // Add role to cloudwatch
             // deploy: false // Force deployment on deploy
         });
         // Create routes in API
@@ -47,10 +47,10 @@ export class FGPApiStack extends Stack {
         this.setAPIResource(noticesStack.lambdas, 'notices');
     };
     // Create API resource from lists of lambdas
-    setAPIResource(lambdas:Array<LambdaI>, name:string){
+    setAPIResource(lambdas: Array<LambdaI>, name: string) {
         const root = this.api.root.addResource(name);
-        lambdas.forEach( l => {
-            switch(l.file){
+        lambdas.forEach(l => {
+            switch (l.file) {
                 case "create.ts":
                     const create = root.addResource('create');
                     this.setAPIResourceMethods(create, l.methods, l.lambda!);
@@ -66,33 +66,23 @@ export class FGPApiStack extends Stack {
                 case "get.ts":
                     this.setAPIResourceMethods(root, l.methods, l.lambda!);
                     break;
-                default :
+                default:
                     const res = this.api.root.addResource(l.name);
-                    this.setAPIResourceMethods(res, l.methods, l.lambda!)
+                    this.setAPIResourceMethods(res, l.methods, l.lambda!, l.proxy)
             }
-            // If lambda is for edition
-            // if(l.file == 'edit.ts') {
-            //     const edit = root.addResource('edit');
-            //     this.setAPIResourceMethods(edit, l.methods, l.lambda!);
-            // }else if(l.file == "get.ts"){
-            //     this.setAPIResourceMethods(root, l.methods, l.lambda!);
-            // }else{
-            //     const res = this.api.root.addResource(l.name);
-            //     this.setAPIResourceMethods(res, l.methods, l.lambda!);
-            // }
         })
     }
     // Create lambda integration and add mehods and cors to API route
-    setAPIResourceMethods(resource:IResource, methods:Array<string>, lambda:any){
+    setAPIResourceMethods(resource: IResource, methods: Array<string>, lambda: any, proxy: boolean = false) {
         // Create integration with the lambda inside l
-        const lambdaIntegration = new LambdaIntegration(lambda as IFunction, { 
-            proxy: false,
-            integrationResponses:this.intResp
-         });
+        const lambdaIntegration = new LambdaIntegration(lambda as IFunction, {
+            proxy,
+            integrationResponses: this.intResp
+        });
         // Add methods in route from the methode of the resource
-        methods.forEach( m => {
+        methods.forEach(m => {
             resource.addMethod(m, lambdaIntegration, {
-                methodResponses:this.metResp
+                methodResponses: this.metResp
             });
         });
         // Add cors for route
