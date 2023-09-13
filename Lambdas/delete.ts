@@ -10,7 +10,6 @@ export const handler = async (event: any = {}): Promise<any> => {
   let body: any = null;
   /** Vérifier que des données ont été envoyées */
   if (!isObject(event)) {
-    // return { statusCode: 400, body: { message : L.ER_BODY } };
     return L.ER_BODY
   } else {
     // body = JSON.parse(event.body);

@@ -4,69 +4,115 @@ import * as AWS from 'aws-sdk';;
 // Accessing DYnamoDB table
 const db = new AWS.DynamoDB.DocumentClient();
 
-/** Create on PUT request */
-export const createData = async (body: any, KEY: string, BDD: string) => {
-    // Paramètres transmis dans la requête vers DynamoDB
-    const params = {
-        TableName: BDD,
-        Item: body
-    };
-    // Requête vers DynamoDB
-    try {
-        const response = await db.put(params).promise();
-        return { statusCode: 201, body: L.ADD };
-    } catch (er) {
-        return { statusCode: 500, body: JSON.stringify(er) };
-    }
-}
-
-/** Update on POST request */
-export const updateData = async (body: any, KEY: string, BDD: string) => {
+/**
+ * Get filtered data from table in Dynamodb
+ * @param PRIMARY Primary key name in table
+ * @param KEY Table primary ky value
+ * @param filter {any} List of filter to select data ; take the form of key|value
+ * @param haveTo {any} List parameters to informations on what to get inside a record
+ * @param BDD Table name
+ * @returns 
+ */
+export const getRecByPrefix = async (PRIMARY: string, KEY: string, BDD: string, haveTo?: any) => {
     const expressions: Array<string> = [];
     const values: any = {};
-    for (let i in body) {
-        if (i != KEY) {
-            expressions.push(`${i} = :${i}`);
-            values[`:${i}`] = body[i];
-        }
-    }
-    const expression = 'set ' + expressions.join();
-
     // Parameters send to DynamoDB
     const params: any = {
         TableName: BDD,
         Key: {
-            [KEY]: body[KEY]
+            [PRIMARY]: KEY
         },
-        UpdateExpression: expression,
-        ExpressionAttributeValues: values,
-        ReturnValues: 'UPDATED_NEW'
+        ProjectionExpression:`${PRIMARY}`
     }
-
+    // set contains and projectionExpression from haveTo variable
+    if(haveTo){
+        params.FilterExpression = setPrefixesContains(haveTo);
+        params.ProjectionExpression = setPrefixProjection(PRIMARY, haveTo)
+    }
     // Requête vers DynamoDB
     try {
-        const response = await db.update(params).promise();
-        return { statusCode: 204, body: L.UPDATE };
+        const response = await db.query(params).promise();
+        return response.Items;
     } catch (er: any) {
-        // const errorResponse = er.code === 'ValidationException' && er.message.includes('reserved keyword') ?
-        // DYNAMODB_EXECUTION_ERROR : RESERVED_RESPONSE;
-        return { statusCode: 500, body: JSON.stringify(er) };
+        return er;
     }
 }
-/** Delete collection */
-export const deleteData = async (body: any, KEY: string, BDD: string) => {
-    // Paramètres transmis dans la requête vers DynamoDB
-    const params = {
+/**
+ * Get filtered data from table in Dynamodb
+ * @param PRIMARY Primary key name in table
+ * @param KEY Table primary ky value
+ * @param filter {any} List of filter to select data ; take the form of key|value
+ * @param haveTo {any} List parameters to informations on what to get inside a record
+ * @param BDD Table name
+ * @returns 
+ */
+export const getFilterRec = async (PRIMARY: string, KEY: string, BDD: string, filter: any, haveTo?: any) => {
+    const expressions: Array<string> = [];
+    const values: any = {};
+    // Set expression from filters
+    for (let i in filter) {
+        if (i != KEY) {
+            expressions.push(`${i} = :${i}`);
+            values[`:${i}`] = filter[i];
+        }
+    }
+    const expression = expressions.join();
+    // Parameters send to DynamoDB
+    const params: any = {
         TableName: BDD,
         Key: {
-            [KEY]: body[KEY]
-        }
-    };
+            [PRIMARY]: KEY
+        },
+        KeyConditionExpression: expression,
+        ExpressionAttributeValues: values,
+    }
+    // set contains from... contains
+    if(haveTo){
+        params.FilterExpression = setPrefixesContains(haveTo);
+    }
     // Requête vers DynamoDB
     try {
-        const response = await db.delete(params).promise();
-        return { statusCode: 200, body: L.DEL };
-    } catch (er) {
-        return { statusCode: 500, body: JSON.stringify(er) };
+        const response = await db.query(params).promise();
+        return response.Items;
+    } catch (er: any) {
+        return er;
     }
+}
+/** 
+ * Get prefixes from requests to set contains in request
+ * @params prefix {string} Prefix from request, could be many separated by comma
+ * */
+const setPrefixesContains = (prefix: string):string => {
+    let contains = '';
+    // Get prefixes as list from request (allow many prefixes in requests)
+    if (prefix.indexOf(',') > -1) {
+        const prefixes = prefix.split(',');
+        prefixes.forEach((p, i) => {
+            if (i == 0) {
+                contains = `contains (prefix, ${p})`
+            } else {
+                contains += ` OR contains (prefix, ${p})`
+            }
+        });
+    }else{
+        contains = `contains (prefix, ${prefix})`;
+    }
+    return contains;
+}
+/**
+ * 
+ * @param key Primary key of the table to get in the records
+ * @param prefix data linked to asked prefixs
+ * @returns 
+ */
+const setPrefixProjection = (key:string, prefix:any) => {
+    let projection = `${key}`;
+    // Get prefixes as list from request (allow many prefixes in requests)
+    if (prefix.indexOf(',') > -1) {
+        const prefixes = prefix.split(',');
+        prefixes.forEach((p:string) => {
+            projection += `, ${p.substring(3, p.length)}`;
+        });
+    }
+    return projection;
 }

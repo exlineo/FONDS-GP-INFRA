@@ -37,7 +37,6 @@ export const handler = async (event: any = {}): Promise<any> => {
       const fold = liste.Contents![i].Key!.split('/')[0];
       if (!dir.includes(fold)) dir.push(fold);
     }
-    // return { statusCode: 200, body: dir };
     return dir;
   } else {
     /** Get metadata list in schemas from database */
@@ -45,12 +44,10 @@ export const handler = async (event: any = {}): Promise<any> => {
     if (response.Item) {
       for (let i in response.Item) {
           if(response.Item[i].schema) {
-            // response.Item[i].schema.values.forEach((v:any) => schemas.push(v));
             prefix[i] = response.Item[i];
           };
         }
     } else {
-        // return { statusCode: 404, body: L.ER_DATA };
         return L.ER_DATA
     }
     // Get data from objects
@@ -58,10 +55,8 @@ export const handler = async (event: any = {}): Promise<any> => {
       let { Body } = await s3.getObject({ "Bucket": BUCKET, "Key": liste.Contents[i].Key }).promise();
       let exe;
       const obj:any = {};
-      // console.log(Body.toString());
       let meta = regXML.exec(Body!.toString());
         if (meta) {
-          // console.log("Meta : " + meta);
           while ((exe = regFiltre.exec(meta[0]))) {
             data.push(exe[1]);
           }
@@ -79,7 +74,6 @@ export const handler = async (event: any = {}): Promise<any> => {
           }
         }
       
-      // let tags = regTags.exec(Body.toString());
       let tags = Body!.toString().match(regTags);
       console.log("Tags : " + Body!.toString().match(regTags));
       
@@ -90,9 +84,7 @@ export const handler = async (event: any = {}): Promise<any> => {
           const pre = prefix[p];
           for(let s = 0; s < pre.schema.values.length; ++s){
             const schem = pre.schema.values[s];
-            // console.log("id schema > " + schem);
             const re = new RegExp(`<${pre.id}:${schem}>(.+)\<\/${pre.id}:${schem}>`, 'gms');
-            // console.log(re + ' > matches : ' + re.exec(tags[0]));
             const tmpTags:any = re.exec(tags[0]);
             if(tmpTags){
               obj[p][schem] = [];
@@ -117,7 +109,6 @@ export const handler = async (event: any = {}): Promise<any> => {
       
       metas.push(obj);
     }
-    // return { statusCode: 200, body: metas };
     return metas;
   }
 }

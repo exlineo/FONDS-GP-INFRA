@@ -1,8 +1,10 @@
 import * as AWS from 'aws-sdk';
 import { getRecordXML, getIdentifierXML, getlistIdentifiersXML, getListRecordsXML } from './utils/toXML';
+import { getRecByPrefix } from './requetes/oai';
 import { L } from './traductions/fr';
 // Exemples de requetes : https://www.hindawi.com/oai-pmh/
 // http://www.openarchives.org/OAI/openarchivesprotocol.html#ResponseCompression
+// http://www.openarchives.org/OAI/openarchivesprotocol.html
 // https://libtechlaunchpad.com/2017/02/13/oai-pmh-basics-and-resources/
 
 // Récupérer la variable d'environnement créée par le CDK
@@ -24,18 +26,23 @@ export const handler = async (event: any = {}, context: any): Promise<any> => {
   /** Get query params from URL */
   console.log(verb, metadataprefix);
   /** List records from a prefix */
-  const getListRecords = ():string => {
+  const getListRecords = (): string => {
     return getListRecordsXML();
   };
   const getlistSets = () => {
-    
+
   };
   const getListMetadataFormats = () => {
 
   };
   /** Get a record in the database */
-  const getRecord = ():string => {
-    return getRecordXML({});
+  const getRecord = (): unknown => {
+    try {
+      const rec = getRecByPrefix(PRIMARY_KEY, identifier, DB_T_NAME, metadataprefix ?? metadataprefix);
+      return getRecordXML(rec);
+    } catch (er) {
+      return er;
+    }
   }
   /** Get informations from the OIA-PMH server */
   const getIdentifier = () => {
@@ -45,7 +52,7 @@ export const handler = async (event: any = {}, context: any): Promise<any> => {
     return getlistIdentifiersXML();
   }
   /** Response to send */
-  let resp = '';
+  let resp: unknown = '';
   /** Filter request from verb parameter  */
   if (verb) {
     switch (verb.toLowerCase()) {
@@ -54,7 +61,7 @@ export const handler = async (event: any = {}, context: any): Promise<any> => {
         break;
       case 'listidentifier':
         resp = getlistIdentifiersXML();
-          break;
+        break;
       case 'getrecord':
         resp = getRecord();
         break;

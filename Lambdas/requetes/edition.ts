@@ -1,6 +1,5 @@
 import { L } from '../traductions/fr';
 import * as AWS from 'aws-sdk';
-// import { request } from 'http';
 
 // Accessing DYnamoDB table
 const db = new AWS.DynamoDB.DocumentClient();
@@ -31,7 +30,6 @@ const createItem = async (body: any, BDD: string) => {
     // Requête vers DynamoDB
     try {
         const response = await db.put(params).promise();
-        // return { statusCode: 200, body: JSON.stringify(response.ItemCollectionMetrics) };
         return response.ItemCollectionMetrics;
     } catch (er) {
         // return { statusCode: 500, body: JSON.stringify(er) };

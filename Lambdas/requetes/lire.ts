@@ -22,6 +22,44 @@ export const getId = async (PRIMARY: string, KEY: string, BDD: string) => {
         return er;
     }
 }
+/**
+ * Get filtered data from table in Dynamodb
+ * @param PRIMARY Primary key name in table
+ * @param KEY Table primary ky value
+ * @param Filter {Array<any>} List of filter to select data ; take the form of key|value
+ * @param BDD Table name
+ * @returns 
+ */
+export const getIdFilter = async (PRIMARY: string, KEY: string, filter:Array<any>, BDD: string) => {
+    const expressions: Array<string> = [];
+    const values: any = {};
+    for (let i in filter) {
+        if (i != KEY) {
+            expressions.push(`${i} = :${i}`);
+            values[`:${i}`] = filter[i];
+        }
+    }
+    const expression = expressions.join();
+
+    // Parameters send to DynamoDB
+    const params: any = {
+        TableName: BDD,
+        Key: {
+            [PRIMARY]: KEY
+        },
+        KeyConditionExpression: expression,
+        ExpressionAttributeValues: values,
+        ReturnValues: 'UPDATED_NEW'
+    }
+
+    // Requête vers DynamoDB
+    try {
+        const response = await db.query(params).promise();
+        return response.Items;
+    } catch (er: any) {
+        return er;
+    }
+}
 /** Get many items from table with ids
  * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#batchGetItem-property
 */
@@ -90,7 +128,6 @@ export const search = async (KEY:string, body:any, BDD: string) => {
         // return {statusCode:200, body: JSON.stringify(response.Items)};
         return response.Items;
     } catch (er) {
-        // return { statusCode: 500, body : JSON.stringify(er) };
         return er;
     }
 }

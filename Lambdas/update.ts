@@ -1,5 +1,5 @@
 import { L } from './traductions/fr';
-import { updateData, isObject } from './requetes/edition';
+import { updateData } from './requetes/edition';
 
 // Récupérer la variable d'environnement créée par le CDK
 const DB_T_NAME = process.env.DB_T_NAME || '';
@@ -10,7 +10,6 @@ export const handler = async (event: any = {}): Promise<any> => {
   let body: any = null;
   /** Vérifier que des données ont été envoyées */
   if (!event) {
-    // return { statusCode: 400, body: { message : L.ER_BODY } };
     return L.ER_BODY;
   } else {
     // body = JSON.parse(event.body);

@@ -197,19 +197,19 @@ export class FondsGpInfraStack extends cdk.Stack {
     });
     return layers;
   }
-  /** Save outputs to get Lambdas URL list */
-  saveOutPut(table: string, item: any) {
-    new cr.AwsCustomResource(this, 'configurationstable', {
-      onCreate: {
-        service: 'DynamoDB',
-        action: 'putItem',
-        parameters: {
-          TableName: table,
-          Item: item
-        },
-        physicalResourceId: cr.PhysicalResourceId.of(table + '_initialization')
-      },
-      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE }),
-    });
-  }
+  /** Save outputs to get Lambdas URL list (not used)*/
+  // saveOutPut(table: string, item: any) {
+  //   new cr.AwsCustomResource(this, 'configurationstable', {
+  //     onCreate: {
+  //       service: 'DynamoDB',
+  //       action: 'putItem',
+  //       parameters: {
+  //         TableName: table,
+  //         Item: item
+  //       },
+  //       physicalResourceId: cr.PhysicalResourceId.of(table + '_initialization')
+  //     },
+  //     policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE }),
+  //   });
+  // }
 }

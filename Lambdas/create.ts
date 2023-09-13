@@ -8,7 +8,6 @@ const PRIMARY_KEY = process.env.PRIMARY_KEY || '';
 export const handler = async (event: any = {}): Promise<any> => {
   /** Vérifier que des données ont été envoyées */
   if (!event || typeof event === "string") {
-    // return { statusCode: 400, body: { message : L.ER_BODY } };
     return L.ER_BODY;
   }
   /** Create, update, delete */
