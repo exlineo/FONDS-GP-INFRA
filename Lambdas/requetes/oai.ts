@@ -3,7 +3,28 @@ import * as AWS from 'aws-sdk';;
 
 // Accessing DYnamoDB table
 const db = new AWS.DynamoDB.DocumentClient();
-
+/** Get one item from table */
+export const getIdPrefix = async (PRIMARY: string, KEY: string, BDD: string, prefixes?:string) => {
+    const params: { TableName: string, Key: any, ProjectionExpression?:string } = {
+        TableName: BDD,
+        Key: { [PRIMARY]: KEY }
+    };
+    if(prefixes){
+        params.ProjectionExpression = setPrefixProjection(PRIMARY, prefixes)
+    }
+    // Get data from DynamoDB in table
+    try {
+        const response = await db.get(params).promise();
+        if (response.Item) {
+            return response.Item;
+        } else {
+            return { statusCode: 404 };
+        }
+    } catch (er) {
+        // return { statusCode: 500, body : JSON.stringify(er) };
+        return er;
+    }
+}
 /**
  * Get filtered data from table in Dynamodb
  * @param PRIMARY Primary key name in table
@@ -14,15 +35,12 @@ const db = new AWS.DynamoDB.DocumentClient();
  * @returns 
  */
 export const getRecByPrefix = async (PRIMARY: string, KEY: string, BDD: string, haveTo?: any) => {
-    const expressions: Array<string> = [];
-    const values: any = {};
+    // const expressions: Array<string> = [];s
+    // const values: any = {};
     // Parameters send to DynamoDB
     const params: any = {
-        TableName: BDD,
-        Key: {
-            [PRIMARY]: KEY
-        },
-        ProjectionExpression:`${PRIMARY}`
+        TableName: BDD
+        // ProjectionExpression:`${PRIMARY}`
     }
     // set contains and projectionExpression from haveTo variable
     if(haveTo){
@@ -100,7 +118,7 @@ const setPrefixesContains = (prefix: string):string => {
     return contains;
 }
 /**
- * 
+ * Set ProjectionExpression to list all fields to get from the database
  * @param key Primary key of the table to get in the records
  * @param prefix data linked to asked prefixs
  * @returns 
@@ -111,8 +129,10 @@ const setPrefixProjection = (key:string, prefix:any) => {
     if (prefix.indexOf(',') > -1) {
         const prefixes = prefix.split(',');
         prefixes.forEach((p:string) => {
-            projection += `, ${p.substring(3, p.length)}`;
+            projection += `, ${p.substring(4, p.length)}`;
         });
-    }
+    } else {
+        projection += `, ${prefix.substring(4, prefix.length)}`;
+    };
     return projection;
 }

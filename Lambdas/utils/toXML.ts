@@ -1,12 +1,30 @@
 // XML Reference : http://www.openarchives.org/OAI/openarchivesprotocol.html
-
+/** Open XML */
+const oai = () => {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+            <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" 
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
+                    http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+            <responseDate>${getUTCNow()}</responseDate>`;
+        }
+/** Add request to XML */
+const request = (args:any, url:string) => {
+    let req = '';
+    for(let a in args){
+        if(args[a] != null) req += ` ${a}="${args[a]}"`;
+    }
+    return `<request ${req}>${url}</request>`;
+}
+/** CLose XML */
+const close = `</OAI-PMH>`;
 /**
  * Creating XML header
  * @param setSpec {Array<string>} Adding specifications to header 
  * @param set {Array<string>} If sets are requested
  * @returns Header XML
  */
-const header = (setSpec:Array<string>, set?:Array<string>):string => {
+const header = (id:string, setSpec:Array<string>, set?:Array<string>):string => {
     const date = getUTCNow();
     // Generate spec for ListIdentifers, ListRecords and GeRecord requests
     let spec = `
@@ -24,7 +42,7 @@ const header = (setSpec:Array<string>, set?:Array<string>):string => {
     }
     return `
     <header>
-        <identifier>oai:nema:2021</identifier>
+        <identifier>${id}</identifier>
         <datestamp>${date}</datestamp>
         <setDescription>Serveur OAI Nemateria</setDescription>
         ${spec}
@@ -101,11 +119,7 @@ const setIdentifierXML = ():string => {
     `
 }
 /** Get list records */
-export const getListRecordsXML = ():string => {
-    return '';
-}
-/** Get a record */
-export const getRecordXML = (record:any):string => {
+export const setListRecordsXML = ():string => {
     return '';
 }
 /**
@@ -113,8 +127,9 @@ export const getRecordXML = (record:any):string => {
  * @param record 
  * @returns 
  */
-const setRecordXML = (record:any):string => {
+export const setRecordXML = (PRIMARY:string, record:any, query:any):string => {
     let rec = `
+    <metadata>
     <oai_dc:dc 
     xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" 
     xmlns:dc="http://purl.org/dc/elements/1.1/" 
@@ -123,7 +138,7 @@ const setRecordXML = (record:any):string => {
     http://www.openarchives.org/OAI/2.0/oai_dc.xsd">`;
 
     for(let pref in record){
-        if(pref != 'prefix'){
+        if(pref != 'prefix' && pref != PRIMARY){
             for(let oai in record[pref]){
                 rec  += `
                 <${pref}:${oai}>${record[pref][oai]}</${pref}:${oai}>
@@ -131,6 +146,18 @@ const setRecordXML = (record:any):string => {
             }
         }
     }
-    rec += `</oai_dc:dc>`;
-    return rec;
+    rec += `</oai_dc:dc>
+    </metadata>
+    </record>
+    </GetRecord>`;
+    // Set XML to send
+    let response = `${oai()}
+    ${request(query, 'trucmuche')}
+    <GetRecord>
+        <record>
+        ${header(record[PRIMARY], [])};
+        ${rec}
+        ${close}
+    `
+    return response;
 }

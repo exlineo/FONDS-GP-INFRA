@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk';
-import { getRecordXML, getIdentifierXML, getlistIdentifiersXML, getListRecordsXML } from './utils/toXML';
-import { getRecByPrefix } from './requetes/oai';
+import { setRecordXML, getIdentifierXML, getlistIdentifiersXML, setListRecordsXML } from './utils/toXML';
+import { getIdPrefix } from './requetes/oai';
 import { L } from './traductions/fr';
 // Exemples de requetes : https://www.hindawi.com/oai-pmh/
 // http://www.openarchives.org/OAI/openarchivesprotocol.html#ResponseCompression
@@ -15,7 +15,8 @@ const db = new AWS.DynamoDB.DocumentClient();
 
 export const handler = async (event: any = {}, context: any): Promise<any> => {
 
-  let body: any = null;
+  console.log("Context", context);
+  
   let queries: any = event['queryStringParameters'];
 
   const verb = queries['verb'] || null; // Get verb parameter from OAI norm
@@ -26,30 +27,30 @@ export const handler = async (event: any = {}, context: any): Promise<any> => {
   /** Get query params from URL */
   console.log(verb, metadataprefix);
   /** List records from a prefix */
-  const getListRecords = (): string => {
-    return getListRecordsXML();
+  const getListRecords = async () => {
+    return await setListRecordsXML();
   };
-  const getlistSets = () => {
+  const getlistSets = async () => {
 
   };
-  const getListMetadataFormats = () => {
+  const getListMetadataFormats = async () => {
 
   };
   /** Get a record in the database */
-  const getRecord = (): unknown => {
+  const getRecord = async (): Promise<any> => {
     try {
-      const rec = getRecByPrefix(PRIMARY_KEY, identifier, DB_T_NAME, metadataprefix ?? metadataprefix);
-      return getRecordXML(rec);
+      const rec = await getIdPrefix(PRIMARY_KEY, identifier, DB_T_NAME, metadataprefix ?? metadataprefix);
+      return setRecordXML(PRIMARY_KEY, rec, {identifier, verb, metadataprefix});
     } catch (er) {
       return er;
     }
   }
   /** Get informations from the OIA-PMH server */
-  const getIdentifier = () => {
-    return getIdentifierXML();
+  const getIdentifier = async () => {
+    return await getIdentifierXML();
   }
-  const getlistIdentifiers = () => {
-    return getlistIdentifiersXML();
+  const getlistIdentifiers = async () => {
+    return await getlistIdentifiersXML();
   }
   /** Response to send */
   let resp: unknown = '';
@@ -57,33 +58,21 @@ export const handler = async (event: any = {}, context: any): Promise<any> => {
   if (verb) {
     switch (verb.toLowerCase()) {
       case 'identifier':
-        resp = getIdentifierXML();
+        resp = await getIdentifierXML();
         break;
       case 'listidentifier':
-        resp = getlistIdentifiersXML();
+        resp = await getlistIdentifiersXML();
         break;
       case 'getrecord':
-        resp = getRecord();
+        resp = await getRecord();
         break;
       case 'listrecords':
-        resp = getListRecords();
+        resp = await getListRecords();
         break;
       default:
-        resp = getIdentifier();
+        resp = await getIdentifier();
     }
   }
 
-  return { statusCode: 500, body: JSON.stringify(resp) };
-
-
-  // Requête vers DynamoDB
-  // try {
-  //   const response = await db.update(params).promise();
-  //   return { statusCode: 204, body: L.UPDATE };
-  // } catch (er: any) {
-  //   // const errorResponse = er.code === 'ValidationException' && er.message.includes('reserved keyword') ?
-  //   // DYNAMODB_EXECUTION_ERROR : RESERVED_RESPONSE;
-  //   return { statusCode: 500, body: JSON.stringify(er) };
-  // }
-
+  return { statusCode: 200, body: JSON.stringify(resp) };
 }

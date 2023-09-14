@@ -12,7 +12,6 @@ export const getId = async (PRIMARY: string, KEY: string, BDD: string) => {
     try {
         const response = await db.get(params).promise();
         if (response.Item) {
-            // return {statusCode:200, body: JSON.stringify(response.Item)};
             return response.Item;
         } else {
             return { statusCode: 404 };
