@@ -36,7 +36,7 @@ const noticesLambdas:Array<LambdaI> = [
     { name: 'noticesUpdate', file: 'update.ts', table:'fgpnotices', methods:['PUT'] },
     { name: 'noticesDel', file: 'delete.ts', table:'fgpnotices', methods:['DELETE'] },
     { name: 'search', file: 'search.ts', table:'fgpnotices', methods:['GET', 'POST'], params:{memory:512, duration:300} },
-    { name: 'oaipmh', file: 'oai-pmh.ts', table:'fgpnotices', methods:['GET', 'HEAD', 'POST'], proxy:true },
+    { name: 'oaipmh', file: 'oai-pmh.ts', table:'fgpnotices,fgpcollections', methods:['GET', 'HEAD', 'POST'], proxy:true },
 ];
 export const noticesStack:LambdasStackI = {
     lambdas : noticesLambdas

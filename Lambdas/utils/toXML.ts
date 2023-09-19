@@ -161,3 +161,36 @@ export const setRecordXML = (PRIMARY:string, record:any, query:any):string => {
     `
     return response;
 }
+/**
+ * Getting list of sets
+ * @param sets {Array<any>} 
+ * @returns XML string
+ */
+export const setListSetsXML = (sets:Array<any>):string => {
+    let rec = `<ListSets>`
+    sets.forEach((set:any) => {
+        rec += `
+        <set>
+            <setSpec>${set.alias}</setSpec>
+            <setName>${set.title}</setName>
+            <setDescription>
+                <oai_dc:dc 
+                    xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" 
+                    xmlns:dc="http://purl.org/dc/elements/1.1/" 
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                    xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ 
+                    http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+                    <dc:description>${set.description}</dc:description>
+                </oai_dc:dc>
+            </setDescription>
+        </set>
+        `
+    });
+    
+   rec += `
+        </ListSets>
+    ${close}
+   `;
+
+    return rec;
+}

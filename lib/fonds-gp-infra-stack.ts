@@ -78,8 +78,8 @@ export class FondsGpInfraStack extends cdk.Stack {
    * Il est transmis avec --parameters (cdk deploy --parameters UID=IAM:UserID) https://docs.aws.amazon.com/cdk/v2/guide/parameters.html
    * exemple : https://bobbyhadz.com/blog/aws-cdk-parameters-example
   */
-  async setStackParams() {
-    return await new cdk.CfnParameter(this, 'UID', {
+  setStackParams() {
+    return new cdk.CfnParameter(this, 'UID', {
       type: 'String',
       default: Math.random().toString(36).substring(0, 7), // Création d'une valeur par défaut au cas ou la paramètre ne serait pas transmis
       description: "UID de l'utilisateur",
@@ -131,7 +131,7 @@ export class FondsGpInfraStack extends cdk.Stack {
       layers: l.layers ? this.setLayers(l.layers) : []
     };
     return params;
-  }
+  }  
   /** Set methods for Function URL with methods */
   setFnURLMethods(met: Array<string>) {
     const methods: Array<any> = [];
